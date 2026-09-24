@@ -21,6 +21,8 @@ ApplicationWindow {
     readonly property bool fullScreen: visibility === Window.FullScreen
     // The window opens as a plain player; edit mode (E, or the toggle top right) adds the trim controls.
     property bool editMode: false
+    // Ctrl+H: only the video is shown (an export's progress bar still appears)
+    property bool controlsHidden: false
 
     width: 1180
     height: 760
@@ -192,6 +194,7 @@ ApplicationWindow {
     Shortcut { sequence: "Up"; onActivated: window.changeVolume(0.05) }
     Shortcut { sequence: "Down"; onActivated: window.changeVolume(-0.05) }
     Shortcut { sequence: "F"; onActivated: window.toggleFullScreen() }
+    Shortcut { sequence: "Ctrl+H"; onActivated: window.controlsHidden = !window.controlsHidden }
     Shortcut { sequence: "Esc"; enabled: window.fullScreen; onActivated: window.toggleFullScreen() }
 
     DropArea {
@@ -209,7 +212,7 @@ ApplicationWindow {
         // ---- Top bar ----
         Rectangle {
             Layout.fillWidth: true
-            visible: !window.fullScreen
+            visible: !window.fullScreen && !window.controlsHidden
             implicitHeight: 48
             color: Theme.chrome
 
@@ -326,6 +329,7 @@ ApplicationWindow {
         // ---- Controls ----
         Rectangle {
             Layout.fillWidth: true
+            visible: !window.controlsHidden
             implicitHeight: controls.implicitHeight + 24
             color: Theme.surface
 
@@ -522,7 +526,7 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             visible: window.editor.exporting
-                || (!window.fullScreen && window.editor.status.length > 0)
+                || (!window.fullScreen && !window.controlsHidden && window.editor.status.length > 0)
             implicitHeight: 34
             color: window.editor.ffmpegFound ? Theme.chrome : Theme.warningSoft
 
