@@ -10,6 +10,10 @@ find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Quick QuickControls2 Multimedi
 qt_standard_project_setup(REQUIRES 6.8)
 
 option(CLIPVIEWER_BUILD_TESTS "Build the unit and integration tests" ON)
+option(CLIPVIEWER_BUNDLE_FFMPEG "Install ffmpeg and ffprobe next to the app (downloaded unless CLIPVIEWER_FFMPEG_DIR is set)" OFF)
+set(CLIPVIEWER_FFMPEG_DIR "" CACHE PATH "Folder with ffmpeg and ffprobe to bundle instead of downloading them")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 add_subdirectory(core)
 add_subdirectory(app)

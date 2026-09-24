@@ -90,7 +90,12 @@ locations):
 - Test: `.\dev.ps1 test`.
 - Run: `.\dev.ps1 run -- <video path>`.
 - Package: `.\dev.ps1 dist -Config release` gives a runnable folder in `dist\bin`, with Qt's DLLs,
-  QML modules and plugins (via `qt_generate_deploy_qml_app_script`).
+  QML modules and plugins (via `qt_generate_deploy_qml_app_script`) and FFmpeg in `bin\ffmpeg`.
+  The release presets set `CLIPVIEWER_BUNDLE_FFMPEG`, and `cmake/BundleFfmpeg.cmake` downloads a
+  pinned build at configure time and checks its SHA-256 (gyan.dev on Windows, Martin Riedl's builds
+  on Linux/macOS). `CLIPVIEWER_FFMPEG_DIR` bundles a local copy instead. To bump the version,
+  update the version, URLs and hashes together.
+- Linux/macOS use the `unix-debug` / `unix-release` presets, with Qt found through `QT_ROOT`.
 - Plain CMake also works: `cmake --preset debug`, `cmake --build --preset debug`,
   `ctest --preset debug`. The presets (`CMakePresets.json`) set the compiler and the PATH for
   builds and tests, but not for running the exe outside `dev.ps1`: put
@@ -152,17 +157,18 @@ are MPEG-TS files in a hidden `.<name>.parts-<guid>` folder next to the output, 
 
 ## Roadmap (not done yet)
 
-- FFmpeg auto-download when missing (the .NET app fetched gyan.dev's "essentials" build into
-  `%LOCALAPPDATA%\ClipViewerDesktop\ffmpeg` after checking its SHA-256). `FfmpegPaths` already
-  looks in that folder. For now, a missing FFmpeg shows a warning in the status bar.
+- Release builds bundle FFmpeg. A dev build without FFmpeg shows a warning in the status bar.
+  An in-app download (the .NET app fetched gyan.dev's build into
+  `%LOCALAPPDATA%\ClipViewerDesktop\ffmpeg`, which `FfmpegPaths` still checks) is only needed if
+  the bundled copy ever goes.
 - One running copy per user: later launches hand their video path to it
   (`StartupArgs::makePathsAbsolute` is ready for that).
 - Remember the window's size and position; a recent files list.
 - A playback speed control; a thumbnail preview when hovering over the timeline.
 - Check the full format list (mp4 H.264/HEVC, mov, mkv, webm VP8/VP9/AV1, avi) against Qt
   Multimedia's FFmpeg backend.
-- macOS/Linux builds (the code avoids Windows-only APIs; only `dev.ps1` and the presets are
-  Windows-specific).
+- Try the macOS/Linux builds on real machines. The presets, deployment and FFmpeg bundling are in
+  place, but only Windows has been built and run. Sign and notarize the macOS bundle.
 
 ## Conventions
 

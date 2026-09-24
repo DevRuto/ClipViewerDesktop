@@ -1,4 +1,4 @@
-qt_add_executable(ClipViewerDesktop WIN32
+qt_add_executable(ClipViewerDesktop WIN32 MACOSX_BUNDLE
     src/EditorController.cpp
     src/EditorController.h
     src/StillFrameProvider.h
@@ -41,8 +41,8 @@ target_link_libraries(ClipViewerDesktop PRIVATE
     Qt6::Multimedia
 )
 
-# `cmake --install build/<preset> --prefix dist` gives a runnable folder with Qt's DLLs, QML
-# modules and plugins (windeployqt under the hood).
+# `cmake --install build/<preset> --prefix dist` gives a runnable folder (an app bundle on macOS)
+# with Qt's libraries, QML modules and plugins (windeployqt / macdeployqt under the hood).
 include(GNUInstallDirs)
 install(TARGETS ClipViewerDesktop BUNDLE DESTINATION . RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 qt_generate_deploy_qml_app_script(
@@ -51,3 +51,14 @@ qt_generate_deploy_qml_app_script(
     NO_UNSUPPORTED_PLATFORM_ERROR
 )
 install(SCRIPT ${deploy_script})
+
+# After the Qt deployment, so the deploy tools leave the FFmpeg binaries alone. FfmpegPaths looks
+# in an `ffmpeg` folder next to the executable.
+if(CLIPVIEWER_BUNDLE_FFMPEG)
+    include(BundleFfmpeg)
+    if(APPLE)
+        clipviewer_bundle_ffmpeg(ClipViewerDesktop.app/Contents/MacOS/ffmpeg)
+    else()
+        clipviewer_bundle_ffmpeg(${CMAKE_INSTALL_BINDIR}/ffmpeg)
+    endif()
+endif()

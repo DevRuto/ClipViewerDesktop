@@ -12,7 +12,7 @@
       "name": "mingw-base",
       "hidden": true,
       "inherits": "base",
-      "description": "Qt 6.10 + MinGW 13 as installed by aqtinstall into C:/Qt (see CLAUDE.md). Override QT_ROOT in CMakeUserPresets.json for another location.",
+      "description": "Qt 6.10 + MinGW 13 as installed by aqtinstall into C:/Qt (see README.md). Override QT_ROOT in CMakeUserPresets.json for another location.",
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
       "environment": {
         "QT_ROOT": "C:/Qt/6.10.3/mingw_64",
@@ -25,6 +25,16 @@
       }
     },
     {
+      "name": "unix-base",
+      "hidden": true,
+      "inherits": "base",
+      "description": "Linux or macOS. Qt is found through the QT_ROOT environment variable (e.g. ~/Qt/6.10.3/gcc_64 or ~/Qt/6.10.3/macos).",
+      "condition": { "type": "notEquals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "$penv{QT_ROOT}"
+      }
+    },
+    {
       "name": "debug",
       "displayName": "Debug (MinGW)",
       "inherits": "mingw-base",
@@ -32,14 +42,28 @@
     },
     {
       "name": "release",
-      "displayName": "Release (MinGW)",
+      "displayName": "Release (MinGW, bundles FFmpeg)",
       "inherits": "mingw-base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "CLIPVIEWER_BUNDLE_FFMPEG": "ON" }
+    },
+    {
+      "name": "unix-debug",
+      "displayName": "Debug (Linux/macOS)",
+      "inherits": "unix-base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "unix-release",
+      "displayName": "Release (Linux/macOS, bundles FFmpeg)",
+      "inherits": "unix-base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "CLIPVIEWER_BUNDLE_FFMPEG": "ON" }
     }
   ],
   "buildPresets": [
     { "name": "debug", "configurePreset": "debug" },
-    { "name": "release", "configurePreset": "release" }
+    { "name": "release", "configurePreset": "release" },
+    { "name": "unix-debug", "configurePreset": "unix-debug" },
+    { "name": "unix-release", "configurePreset": "unix-release" }
   ],
   "testPresets": [
     {
@@ -50,6 +74,16 @@
     {
       "name": "release",
       "configurePreset": "release",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "unix-debug",
+      "configurePreset": "unix-debug",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "unix-release",
+      "configurePreset": "unix-release",
       "output": { "outputOnFailure": true }
     }
   ]
