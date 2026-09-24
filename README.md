@@ -14,26 +14,28 @@ It's built for Windows, Linux and macOS, but only Windows has been tested.
 
 ## Requirements
 
-- Qt 6.10, with the Qt Multimedia, Qt Shader Tools and Qt Image Formats modules
+- Qt 6.12, with the Qt Multimedia, Qt Shader Tools, Qt Image Formats and Qt TaskTree modules
+  (TaskTree only keeps a QML plugin that depends on it from warning at configure time)
 - A C++20 compiler: MinGW 13.1 on Windows, GCC 13+ or Clang on Linux, Xcode's Clang on macOS
 - CMake 3.25 or later, and Ninja
 - FFmpeg (`ffmpeg` and `ffprobe`) on PATH, only for running a dev build and the integration tests.
   Release builds bundle their own.
 
-One way to install Qt is with aqtinstall:
+One way to install Qt is with aqtinstall. Its latest release (3.3.0) can't read the per-compiler
+layout Qt uses for Windows builds since 6.11, so install it from a pinned commit until 3.4.0 is out:
 
 ```sh
-pip install --user aqtinstall cmake ninja
+pip install --user "aqtinstall @ git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7" cmake ninja
 
 # Windows (with MinGW), into C:\Qt
-python -m aqt install-qt windows desktop 6.10.3 win64_mingw -m qtmultimedia qtshadertools qtimageformats -O C:\Qt
+python -m aqt install-qt windows desktop 6.12.0 win64_mingw -m qtmultimedia qtshadertools qtimageformats qttasktree -O C:\Qt
 python -m aqt install-tool windows desktop tools_mingw1310 qt.tools.win64_mingw1310 -O C:\Qt
 
 # Linux
-python -m aqt install-qt linux desktop 6.10.3 linux_gcc_64 -m qtmultimedia qtshadertools qtimageformats -O ~/Qt
+python -m aqt install-qt linux desktop 6.12.0 linux_gcc_64 -m qtmultimedia qtshadertools qtimageformats qttasktree -O ~/Qt
 
 # macOS
-python -m aqt install-qt mac desktop 6.10.3 clang_64 -m qtmultimedia qtshadertools qtimageformats -O ~/Qt
+python -m aqt install-qt mac desktop 6.12.0 clang_64 -m qtmultimedia qtshadertools qtimageformats qttasktree -O ~/Qt
 ```
 
 On Linux you also need the OpenGL and XKB development packages (on Debian/Ubuntu:
@@ -46,14 +48,14 @@ On Linux you also need the OpenGL and XKB development packages (on Debian/Ubuntu
 | Windows | `debug` | `release` |
 | Linux, macOS | `unix-debug` | `unix-release` |
 
-The Windows presets expect Qt in `C:\Qt\6.10.3\mingw_64` and MinGW in `C:\Qt\Tools\mingw1310_64`.
+The Windows presets expect Qt in `C:\Qt\6.12.0\mingw_64` and MinGW in `C:\Qt\Tools\mingw1310_64`.
 If yours are somewhere else, override `QT_ROOT` / `MINGW_ROOT` in a `CMakeUserPresets.json`.
 
 The Linux/macOS presets find Qt through the `QT_ROOT` environment variable:
 
 ```sh
-export QT_ROOT=~/Qt/6.10.3/gcc_64      # Linux
-export QT_ROOT=~/Qt/6.10.3/macos       # macOS
+export QT_ROOT=~/Qt/6.12.0/gcc_64      # Linux
+export QT_ROOT=~/Qt/6.12.0/macos       # macOS
 ```
 
 ## Development
@@ -68,7 +70,7 @@ On Windows, the presets put Qt and MinGW on PATH for building and testing, but n
 the exe. Add Qt's `bin` folder to PATH before you start the app:
 
 ```powershell
-$env:PATH = "C:\Qt\6.10.3\mingw_64\bin;$env:PATH"
+$env:PATH = "C:\Qt\6.12.0\mingw_64\bin;$env:PATH"
 .\build\debug\ClipViewerDesktop.exe path\to\video.mp4
 ```
 

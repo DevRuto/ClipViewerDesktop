@@ -12,10 +12,10 @@
       "name": "mingw-base",
       "hidden": true,
       "inherits": "base",
-      "description": "Qt 6.10 + MinGW 13 as installed by aqtinstall into C:/Qt (see README.md). Override QT_ROOT in CMakeUserPresets.json for another location.",
+      "description": "Qt 6.12 + MinGW 13 as installed by aqtinstall into C:/Qt (see README.md). Override QT_ROOT in CMakeUserPresets.json for another location.",
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
       "environment": {
-        "QT_ROOT": "C:/Qt/6.10.3/mingw_64",
+        "QT_ROOT": "C:/Qt/6.12.0/mingw_64",
         "MINGW_ROOT": "C:/Qt/Tools/mingw1310_64",
         "PATH": "$env{QT_ROOT}/bin;$env{MINGW_ROOT}/bin;$penv{PATH}"
       },
@@ -28,7 +28,7 @@
       "name": "unix-base",
       "hidden": true,
       "inherits": "base",
-      "description": "Linux or macOS. Qt is found through the QT_ROOT environment variable (e.g. ~/Qt/6.10.3/gcc_64 or ~/Qt/6.10.3/macos).",
+      "description": "Linux or macOS. Qt is found through the QT_ROOT environment variable (e.g. ~/Qt/6.12.0/gcc_64 or ~/Qt/6.12.0/macos).",
       "condition": { "type": "notEquals", "lhs": "${hostSystemName}", "rhs": "Windows" },
       "cacheVariables": {
         "CMAKE_PREFIX_PATH": "$penv{QT_ROOT}"

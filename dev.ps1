@@ -16,7 +16,7 @@ param(
     [ValidateSet('debug', 'release')]
     [string] $Config = 'debug',
 
-    [string] $QtRoot = $(if ($env:QT_ROOT) { $env:QT_ROOT } else { 'C:\Qt\6.10.3\mingw_64' }),
+    [string] $QtRoot = $(if ($env:QT_ROOT) { $env:QT_ROOT } else { 'C:\Qt\6.12.0\mingw_64' }),
     [string] $MingwRoot = $(if ($env:MINGW_ROOT) { $env:MINGW_ROOT } else { 'C:\Qt\Tools\mingw1310_64' }),
 
     [Parameter(ValueFromRemainingArguments = $true)]

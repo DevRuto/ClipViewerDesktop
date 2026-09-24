@@ -9,7 +9,7 @@
       "args": [],
       "cwd": "${workspaceFolder}",
       "environment": [
-        { "name": "PATH", "value": "C:/Qt/6.10.3/mingw_64/bin;C:/Qt/Tools/mingw1310_64/bin;${env:PATH}" },
+        { "name": "PATH", "value": "C:/Qt/6.12.0/mingw_64/bin;C:/Qt/Tools/mingw1310_64/bin;${env:PATH}" },
         { "name": "QT_FORCE_STDERR_LOGGING", "value": "1" }
       ],
       "MIMode": "gdb",

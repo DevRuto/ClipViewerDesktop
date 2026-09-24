@@ -31,7 +31,7 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
 
 ## Stack
 
-- **C++20, Qt 6.10** (built and tested with 6.10.3 + MinGW 13.1 on Windows). CMake + Ninja.
+- **C++20, Qt 6.12** (built and tested with 6.12.0 + MinGW 13.1 on Windows). CMake + Ninja.
 - **Qt Quick / QML** UI with **Qt Quick Controls (Basic style)**, restyled as **Graphite**:
   near-black neutral surfaces, one amber accent, 6 px corners, Geist / Geist Mono fonts (embedded,
   OFL, loaded in `main.cpp`).
@@ -73,13 +73,14 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
 
 ## Commands
 
-The toolchain is Qt 6.10.3 (MinGW) in `C:\Qt\6.10.3\mingw_64` and MinGW 13.1 in
-`C:\Qt\Tools\mingw1310_64`, installed with aqtinstall. CMake and Ninja come from pip. To
-reinstall:
+The toolchain is Qt 6.12.0 (MinGW) in `C:\Qt\6.12.0\mingw_64` and MinGW 13.1 in
+`C:\Qt\Tools\mingw1310_64`, installed with aqtinstall. CMake and Ninja come from pip. aqtinstall
+3.3.0 can't install Qt 6.11+ on Windows (new repo layout), so it comes from a pinned master commit
+until 3.4.0 is released; the CI workflows pin the same commit (`aqtsource`). To reinstall:
 
 ```powershell
-pip install --user aqtinstall cmake ninja
-python -m aqt install-qt windows desktop 6.10.3 win64_mingw -m qtmultimedia qtshadertools qtimageformats -O C:\Qt
+pip install --user "aqtinstall @ git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7" cmake ninja
+python -m aqt install-qt windows desktop 6.12.0 win64_mingw -m qtmultimedia qtshadertools qtimageformats qttasktree -O C:\Qt
 python -m aqt install-tool windows desktop tools_mingw1310 qt.tools.win64_mingw1310 -O C:\Qt
 ```
 
@@ -102,7 +103,7 @@ locations):
 - Plain CMake also works: `cmake --preset debug`, `cmake --build --preset debug`,
   `ctest --preset debug`. The presets (`CMakePresets.json`) set the compiler and the PATH for
   builds and tests, but not for running the exe outside `dev.ps1`: put
-  `C:\Qt\6.10.3\mingw_64\bin` on PATH first.
+  `C:\Qt\6.12.0\mingw_64\bin` on PATH first.
 - Qt logs go to the debugger on Windows. Set `QT_FORCE_STDERR_LOGGING=1` to see QML warnings
   and errors on the console.
 
