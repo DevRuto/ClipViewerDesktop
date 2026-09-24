@@ -518,10 +518,11 @@ ApplicationWindow {
             }
         }
 
-        // ---- Status bar ----
+        // ---- Status bar: only while there's a message or an export ----
         Rectangle {
             Layout.fillWidth: true
-            visible: !window.fullScreen || window.editor.exporting
+            visible: window.editor.exporting
+                || (!window.fullScreen && window.editor.status.length > 0)
             implicitHeight: 34
             color: window.editor.ffmpegFound ? Theme.chrome : Theme.warningSoft
 
@@ -565,6 +566,15 @@ ApplicationWindow {
                     text: "Cancel"
                     implicitHeight: 26
                     onClicked: window.editor.cancelExport()
+                }
+                // The missing-FFmpeg warning stays; other messages can be dismissed
+                AppButton {
+                    visible: !window.editor.exporting && window.editor.ffmpegFound
+                    quiet: true
+                    iconName: "close"
+                    toolTip: "Dismiss"
+                    implicitHeight: 26
+                    onClicked: window.editor.clearStatus()
                 }
             }
         }

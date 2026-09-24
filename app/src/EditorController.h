@@ -100,6 +100,7 @@ public:
     Q_INVOKABLE QUrl suggestedExportUrl() const;
     Q_INVOKABLE void exportTo(const QUrl &destination);
     Q_INVOKABLE void cancelExport();
+    Q_INVOKABLE void clearStatus() { setStatus({}); }
 
 signals:
     void mediaChanged();
