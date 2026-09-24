@@ -49,10 +49,6 @@ void tryDelete(const QString &path)
 
 } // namespace
 
-const QStringList ClipExporter::UploadableExtensions{QStringLiteral(".mp4"), QStringLiteral(".webm"),
-                                                     QStringLiteral(".mov"), QStringLiteral(".avi"),
-                                                     QStringLiteral(".mkv")};
-
 ExportResult ClipExporter::exportClip(const ExportRequest &request, const Progress &progress,
                                       const CancelToken &cancel) const
 {

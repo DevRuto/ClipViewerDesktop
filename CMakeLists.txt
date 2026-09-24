@@ -12,6 +12,7 @@ qt_standard_project_setup(REQUIRES 6.8)
 option(CLIPVIEWER_BUILD_TESTS "Build the unit and integration tests" ON)
 
 add_subdirectory(core)
+add_subdirectory(app)
 
 if(CLIPVIEWER_BUILD_TESTS)
     enable_testing()

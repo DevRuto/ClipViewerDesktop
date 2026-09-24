@@ -84,24 +84,6 @@ private slots:
         QFETCH(QString, expected);
         QCOMPARE(TimeFormat::formatShort(seconds), expected);
     }
-
-    void formatAge_data()
-    {
-        QTest::addColumn<int>("secondsAgo");
-        QTest::addColumn<QString>("expected");
-        QTest::newRow("seconds") << 20 << "just now";
-        QTest::newRow("minutes") << 5 * 60 << "5 min ago";
-        QTest::newRow("hours") << 3 * 3600 << "3 h ago";
-        QTest::newRow("yesterday") << 30 * 3600 << "yesterday";
-        QTest::newRow("days") << 5 * 86400 << "5 days ago";
-    }
-    void formatAge()
-    {
-        QFETCH(int, secondsAgo);
-        QFETCH(QString, expected);
-        const QDateTime now(QDate(2026, 9, 24), QTime(12, 0), QTimeZone::UTC);
-        QCOMPARE(TimeFormat::formatAge(now.addSecs(-secondsAgo), now), expected);
-    }
 };
 
 QTEST_GUILESS_MAIN(TimeFormatTest)

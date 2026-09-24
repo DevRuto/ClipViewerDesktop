@@ -51,8 +51,6 @@ class ClipExporter
 public:
     using Progress = std::function<void(double)>;
 
-    // Containers the ClipViewer server accepts for upload.
-    static const QStringList UploadableExtensions;
     // Both modes write H.264 in MP4.
     static constexpr auto OutputExtension = ".mp4";
 

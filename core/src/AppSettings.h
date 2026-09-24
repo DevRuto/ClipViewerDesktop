@@ -5,21 +5,16 @@
 
 namespace cv {
 
-// User preferences, stored as camelCase JSON in the same file and format as the .NET app, so both
-// builds share one settings.json. Keys this build doesn't know are kept when saving.
+// User preferences, stored as camelCase JSON. Missing or invalid fields fall back to the defaults;
+// keys this build doesn't know are kept when saving, so older and newer builds can share the file.
 struct AppSettings
 {
-    // Use the compact, video-first layout instead of the one with the side panel.
-    bool compactLayout = false;
-    // The ClipViewer server's base address; empty until the user signs in. The API key is kept in
-    // the OS credential store, never here.
-    QString serverUrl;
-    // The signed-in account's name, shown without asking the server.
-    QString serverUsername;
-    // The export button's main action uploads to ClipViewer instead of saving a file.
-    bool uploadByDefault = false;
-    // The clip player hides its details sidebar.
-    bool hideClipDetails = false;
+    double volume = 1.0; // 0-1
+    bool muted = false;
+    // Export mode: smart cut (true) or re-encode.
+    bool smartCut = true;
+    // Where the last export went; the save dialog starts there. Empty: next to the source video.
+    QString lastExportFolder;
 
     // %LOCALAPPDATA%\ClipViewerDesktop\settings.json on Windows.
     static QString defaultPath();

@@ -8,15 +8,11 @@ StartupArgs StartupArgs::parse(const QStringList &args)
 {
     StartupArgs result;
     for (const QString &arg : args) {
-        if (arg.compare(QLatin1String(EditorFlag), Qt::CaseInsensitive) == 0 || arg == QLatin1String("-e"))
-            result.page = StartupPage::Editor;
-        else if (arg.compare(QLatin1String(ClipsFlag), Qt::CaseInsensitive) == 0)
-            result.page = StartupPage::Clips;
-        else if (!arg.startsWith(QChar('-')) && result.videoPath.isEmpty())
+        if (!arg.startsWith(QChar('-'))) {
             result.videoPath = arg;
+            break;
+        }
     }
-    if (!result.videoPath.isEmpty())
-        result.page = StartupPage::Editor;
     return result;
 }
 

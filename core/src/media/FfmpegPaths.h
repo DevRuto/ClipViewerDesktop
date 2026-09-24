@@ -15,8 +15,7 @@ struct FfmpegPaths
     QString ffprobe;
 
     // Where the app installs its own FFmpeg: %LOCALAPPDATA%\ClipViewerDesktop\ffmpeg on Windows.
-    // Per-user and writable, unlike the app folder. The same folder as the .NET app's downloader,
-    // so a copy either build downloaded is reused.
+    // Per-user and writable, unlike the app folder.
     static QString managedDirectory();
 
     // Finds ffmpeg/ffprobe, in order: configuredDirectory, the CLIPVIEWER_FFMPEG_DIR environment

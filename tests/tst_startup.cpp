@@ -12,6 +12,17 @@
 
 using namespace cv;
 
+namespace {
+
+void writeFile(const QString &path, const QByteArray &content)
+{
+    QFile file(path);
+    QVERIFY(file.open(QIODevice::WriteOnly));
+    file.write(content);
+}
+
+} // namespace
+
 class StartupTest : public QObject
 {
     Q_OBJECT
@@ -19,44 +30,26 @@ class StartupTest : public QObject
 private slots:
     // ---- StartupArgs ----
 
-    void noArguments_opensClips() { QCOMPARE(StartupArgs::parse({}), (StartupArgs{StartupPage::Clips, {}})); }
+    void noArguments_opensNothing() { QCOMPARE(StartupArgs::parse({}).videoPath, QString()); }
 
-    void editorFlag_opensEditor_data()
+    void firstPath_isOpened()
     {
-        QTest::addColumn<QString>("flag");
-        QTest::newRow("long") << "--editor";
-        QTest::newRow("upper case") << "--EDITOR";
-        QTest::newRow("short") << "-e";
-    }
-    void editorFlag_opensEditor()
-    {
-        QFETCH(QString, flag);
-        QCOMPARE(StartupArgs::parse({flag}), (StartupArgs{StartupPage::Editor, {}}));
+        QCOMPARE(StartupArgs::parse({"C:\\clips\\a.mp4"}).videoPath, "C:\\clips\\a.mp4");
+        QCOMPARE(StartupArgs::parse({"a.mp4", "b.mp4"}).videoPath, "a.mp4");
     }
 
-    void clipsFlag_opensClips()
+    void flags_areIgnored()
     {
-        QCOMPARE(StartupArgs::parse({"--clips"}), (StartupArgs{StartupPage::Clips, {}}));
-    }
-
-    void videoPath_opensItInTheEditor()
-    {
-        QCOMPARE(StartupArgs::parse({"C:\\clips\\a.mp4"}), (StartupArgs{StartupPage::Editor, "C:\\clips\\a.mp4"}));
-        QCOMPARE(StartupArgs::parse({"--clips", "a.mp4"}), (StartupArgs{StartupPage::Editor, "a.mp4"}));
-        QCOMPARE(StartupArgs::parse({"--editor", "a.mp4", "b.mp4"}), (StartupArgs{StartupPage::Editor, "a.mp4"}));
-    }
-
-    void unknownFlags_areIgnored()
-    {
-        QCOMPARE(StartupArgs::parse({"--verbose"}), (StartupArgs{StartupPage::Clips, {}}));
+        QCOMPARE(StartupArgs::parse({"--verbose"}).videoPath, QString());
+        QCOMPARE(StartupArgs::parse({"--verbose", "a.mp4"}).videoPath, "a.mp4");
     }
 
     void makePathsAbsolute_leavesFlags()
     {
         const QString dir = QDir::tempPath();
-        const QStringList result = StartupArgs::makePathsAbsolute({"--editor", "a.mp4"}, dir);
+        const QStringList result = StartupArgs::makePathsAbsolute({"--verbose", "a.mp4"}, dir);
         QCOMPARE(result.size(), 2);
-        QCOMPARE(result[0], "--editor");
+        QCOMPARE(result[0], "--verbose");
         QCOMPARE(QDir::fromNativeSeparators(result[1]), QDir(dir).filePath("a.mp4"));
     }
 
@@ -116,31 +109,36 @@ private slots:
         QTemporaryDir dir;
         const QString path = dir.filePath("sub/settings.json");
         QDir().mkpath(dir.filePath("sub"));
-        QFile file(path);
-        QVERIFY(file.open(QIODevice::WriteOnly));
-        file.write("{ \"serverUrl\": \"https://clips.example\", \"futureSetting\": 42 }");
-        file.close();
+        writeFile(path, "{ \"volume\": 0.25, \"futureSetting\": 42 }");
 
         AppSettings settings = AppSettings::load(path);
-        QCOMPARE(settings.serverUrl, "https://clips.example");
-        settings.compactLayout = true;
+        QCOMPARE(settings.volume, 0.25);
+        settings.smartCut = false;
+        settings.lastExportFolder = "D:/exports";
         QVERIFY(settings.save(path));
 
+        QFile file(path);
         QVERIFY(file.open(QIODevice::ReadOnly));
         const QJsonObject json = QJsonDocument::fromJson(file.readAll()).object();
         QCOMPARE(json.value("futureSetting").toInt(), 42);
-        QCOMPARE(json.value("compactLayout").toBool(), true);
+        QCOMPARE(json.value("smartCut").toBool(true), false);
         QCOMPARE(AppSettings::load(path), settings);
+    }
+
+    void settings_invalidValues_fallBack()
+    {
+        QTemporaryDir dir;
+        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\" }");
+        const AppSettings settings = AppSettings::load(dir.filePath("s.json"));
+        QCOMPARE(settings.volume, 1.0);
+        QCOMPARE(settings.muted, false);
     }
 
     void settings_garbage_givesDefaults()
     {
         QTemporaryDir dir;
-        QFile file(dir.filePath("settings.json"));
-        QVERIFY(file.open(QIODevice::WriteOnly));
-        file.write("not json");
-        file.close();
-        QCOMPARE(AppSettings::load(file.fileName()), AppSettings{});
+        writeFile(dir.filePath("settings.json"), "not json");
+        QCOMPARE(AppSettings::load(dir.filePath("settings.json")), AppSettings{});
     }
 };
 

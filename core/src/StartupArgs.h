@@ -5,20 +5,10 @@
 
 namespace cv {
 
-// Which window a launch asks for.
-enum class StartupPage {
-    Clips,  // the clip browser, the app's main page
-    Editor, // the trim editor, optionally with a video to open
-};
-
-// The command line: no arguments opens the clip browser; --editor (or -e) opens the editor;
-// --clips the browser; a file path opens that video in the editor ("Open with").
+// The command line: an optional video path to open ("Open with", drag onto the exe). Flags
+// (anything starting with '-') are ignored.
 struct StartupArgs
 {
-    static constexpr auto EditorFlag = "--editor";
-    static constexpr auto ClipsFlag = "--clips";
-
-    StartupPage page = StartupPage::Clips;
     QString videoPath; // empty when none was given
 
     static StartupArgs parse(const QStringList &args);

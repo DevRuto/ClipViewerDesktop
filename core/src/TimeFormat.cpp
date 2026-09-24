@@ -1,6 +1,5 @@
 #include "TimeFormat.h"
 
-#include <QLocale>
 #include <QRegularExpression>
 #include <QStringList>
 
@@ -35,22 +34,6 @@ QString format(double seconds)
         seconds = 0;
     const auto ms = static_cast<qint64>(std::llround(seconds * 1000));
     return QStringLiteral("%1.%2").arg(hms(ms / 1000, false)).arg(ms % 1000, 3, 10, QChar('0'));
-}
-
-QString formatAge(const QDateTime &time, const QDateTime &now)
-{
-    const qint64 age = time.secsTo(now);
-    if (age < 60)
-        return QStringLiteral("just now");
-    if (age < 3600)
-        return QStringLiteral("%1 min ago").arg(age / 60);
-    if (age < 86400)
-        return QStringLiteral("%1 h ago").arg(age / 3600);
-    if (age < 2 * 86400)
-        return QStringLiteral("yesterday");
-    if (age < 30 * 86400)
-        return QStringLiteral("%1 days ago").arg(age / 86400);
-    return QLocale().toString(time.toLocalTime(), QStringLiteral("d MMM yyyy"));
 }
 
 std::optional<double> parse(const QString &text)
