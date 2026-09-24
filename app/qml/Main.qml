@@ -291,7 +291,6 @@ ApplicationWindow {
             MouseArea {
                 anchors.fill: parent
                 enabled: window.editor.hasMedia
-                cursorShape: Qt.PointingHandCursor
                 onPressed: mouse => {
                     // 0: toggle; 1/2: a double-click on an edge undoes the first click's toggle and seeks.
                     const action = window.editor.videoClick(mouse.x / width)
