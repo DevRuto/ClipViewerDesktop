@@ -1,0 +1,281 @@
+name: Release
+
+# Pushing a tag like v1.2.3 builds the packages for every platform and publishes them as a GitHub
+# release (a tag with a suffix, like v1.2.3-beta.1, makes a pre-release). Running the workflow by
+# hand builds the same packages as workflow artifacts, without a release.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      numeric: ${{ steps.version.outputs.numeric }}
+    steps:
+      # v1.2.3-beta.1 -> version 1.2.3-beta.1, numeric 1.2.3 (for the Windows file version).
+      - id: version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="0.0.0-dev.${GITHUB_SHA::7}"
+          fi
+          numeric=$(grep -oE '^[0-9]+(\.[0-9]+){0,3}' <<< "$version" || echo 0.0.0)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "numeric=$numeric" >> "$GITHUB_OUTPUT"
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Qt and MinGW
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.10.3
+          host: windows
+          target: desktop
+          arch: win64_mingw
+          modules: qtmultimedia qtshadertools qtimageformats
+          tools: tools_mingw1310,qt.tools.win64_mingw1310
+          dir: 'C:\'
+          cache: true
+
+      - name: Install CMake and Ninja
+        run: pip install cmake ninja
+
+      # The release preset downloads and bundles the pinned FFmpeg build. The CI workflows run the
+      # tests on every push, including this tag.
+      - name: Configure
+        run: cmake --preset release -DCLIPVIEWER_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build --preset release
+
+      - name: Deploy
+        run: cmake --install build/release --prefix dist
+
+      - name: Portable zip
+        shell: pwsh
+        run: |
+          $name = "ClipViewerDesktop-$env:VERSION-windows-x64-portable"
+          New-Item -ItemType Directory out | Out-Null
+          Copy-Item dist -Destination "stage\$name" -Recurse
+          Compress-Archive -Path "stage\$name" -DestinationPath "out\$name.zip"
+
+      - name: Installer
+        shell: pwsh
+        run: |
+          # Inno Setup 6 or 7, whichever the runner image has; installed from Chocolatey if neither.
+          function Find-Iscc {
+              Get-ChildItem $env:ProgramFiles, ${env:ProgramFiles(x86)} -Filter 'Inno Setup *' -Directory -ErrorAction SilentlyContinue |
+                  ForEach-Object { Join-Path $_.FullName 'ISCC.exe' } | Where-Object { Test-Path $_ } | Select-Object -Last 1
+          }
+          $iscc = Find-Iscc
+          if (-not $iscc) {
+              choco install innosetup -y --no-progress
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+              $iscc = Find-Iscc
+          }
+          & $iscc "/DAppVersion=$env:VERSION" "/DNumericVersion=${{ needs.version.outputs.numeric }}" `
+              "/DSourceDir=$PWD\dist" "/DOutputDir=$PWD\out" packaging\windows\ClipViewerDesktop.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: windows-x64
+          path: out/*
+          if-no-files-found: error
+
+  linux:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libfontconfig1-dev libfreetype-dev
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.10.3
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          modules: qtmultimedia qtshadertools qtimageformats
+          cache: true
+
+      - name: Set QT_ROOT
+        run: echo "QT_ROOT=$QT_ROOT_DIR" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install CMake and Ninja
+        run: pip install cmake ninja
+
+      - name: Configure
+        run: cmake --preset unix-release -DCLIPVIEWER_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build --preset unix-release
+
+      - name: Deploy
+        run: cmake --install build/unix-release --prefix dist
+
+      - name: Tarball
+        run: |
+          name="ClipViewerDesktop-$VERSION-linux-x64"
+          mkdir -p out stage
+          cp -a dist "stage/$name"
+          tar -C stage -czf "out/$name.tar.gz" "$name"
+
+      # The deployed folder (bin, lib, plugins, qml) goes under usr/ as is; qt.conf and the RPATH
+      # are relative, so they still resolve.
+      - name: AppImage
+        run: |
+          mkdir -p AppDir
+          cp -a dist AppDir/usr
+          cp packaging/linux/ClipViewerDesktop.desktop AppDir/clipviewerdesktop.desktop
+          cp app/assets/app-icon.png AppDir/clipviewerdesktop.png
+          cat > AppDir/AppRun <<'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/ClipViewerDesktop" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+          curl -fsSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir "out/ClipViewerDesktop-$VERSION-linux-x64.AppImage"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-x64
+          path: out/*
+          if-no-files-found: error
+
+  macos:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.10.3
+          host: mac
+          target: desktop
+          arch: clang_64
+          modules: qtmultimedia qtshadertools qtimageformats
+          cache: true
+
+      - name: Set QT_ROOT
+        run: echo "QT_ROOT=$QT_ROOT_DIR" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install CMake and Ninja
+        run: pip install cmake ninja
+
+      # Qt's macOS libraries are universal, but the bundled FFmpeg is for one architecture, so
+      # each runner builds for its own.
+      - name: Configure
+        run: cmake --preset unix-release -DCLIPVIEWER_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build --preset unix-release
+
+      - name: Deploy
+        run: cmake --install build/unix-release --prefix dist
+
+      # Not signed with a Developer ID or notarized yet. An ad-hoc signature at least lets the
+      # bundle run on Apple silicon once Gatekeeper is bypassed. Sign the nested FFmpeg tools
+      # first; --deep doesn't reach into Contents/MacOS subfolders.
+      - name: Ad-hoc sign
+        run: |
+          app=dist/ClipViewerDesktop.app
+          for tool in "$app"/Contents/MacOS/ffmpeg/*; do
+            [ -x "$tool" ] && codesign --force --sign - "$tool"
+          done
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict "$app"
+
+      - name: Disk image and zip
+        run: |
+          name="ClipViewerDesktop-$VERSION-macos-${{ matrix.arch }}"
+          mkdir -p out stage
+          cp -R dist/ClipViewerDesktop.app stage/
+          ln -s /Applications stage/Applications
+          hdiutil create -volname "ClipViewer Desktop" -srcfolder stage -fs HFS+ -format UDZO -ov "out/$name.dmg"
+          ditto -c -k --keepParent dist/ClipViewerDesktop.app "out/$name.zip"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: macos-${{ matrix.arch }}
+          path: out/*
+          if-no-files-found: error
+
+  # Linux and macOS haven't been run on real machines yet, so their failures don't hold back the
+  # release; it goes out with whatever packages were built, as long as Windows succeeded.
+  publish:
+    needs: [version, windows, linux, macos]
+    if: ${{ !cancelled() && github.ref_type == 'tag' && needs.windows.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: release
+        run: sha256sum * > SHA256SUMS.txt
+
+      # Re-running the workflow replaces the files of an existing release.
+      - name: Publish
+        run: |
+          prerelease=
+          [[ "$TAG" == *-* ]] && prerelease=--prerelease
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" release/* --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" release/* --repo "$GITHUB_REPOSITORY" \
+              --title "ClipViewer Desktop ${{ needs.version.outputs.version }}" --generate-notes $prerelease
+          fi

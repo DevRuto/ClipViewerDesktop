@@ -97,6 +97,22 @@ libraries, QML modules and plugins, and FFmpeg:
   `dist/bin/ffmpeg/`
 - macOS: `dist/ClipViewerDesktop.app`, with FFmpeg in `Contents/MacOS/ffmpeg/`
 
+### Releases
+
+Pushing a tag like `v1.2.3` runs `.github/workflows/release.yml`. It builds every platform and
+publishes a GitHub release with these files (a tag with a suffix, like `v1.2.3-beta.1`, makes a
+pre-release):
+
+- Windows x64: an installer (Inno Setup, `packaging/windows/ClipViewerDesktop.iss`) and a
+  portable zip
+- Linux x64: an AppImage and a `.tar.gz`
+- macOS arm64 and x64: a `.dmg` and a zipped `.app`, ad-hoc signed only
+- `SHA256SUMS.txt`
+
+The release goes out as long as the Windows build succeeds. A failed Linux or macOS build leaves
+its files out. To build the packages without a release, run the workflow by hand from the
+Actions tab; the files are attached to the run as artifacts.
+
 ### FFmpeg in the release build
 
 The release presets set `CLIPVIEWER_BUNDLE_FFMPEG=ON`. When you configure, CMake downloads a

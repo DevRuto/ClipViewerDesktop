@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ClipViewer Desktop
+Comment=Play videos and export a trimmed range to MP4
+Exec=ClipViewerDesktop %f
+Icon=clipviewerdesktop
+Terminal=false
+Categories=AudioVideo;Video;Player;AudioVideoEditing;
+MimeType=video/mp4;video/quicktime;video/x-matroska;video/webm;video/x-msvideo;
