@@ -340,6 +340,25 @@ ApplicationWindow {
                 }
             }
 
+            // Progress line along the bottom, shown with the time overlay
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: 3
+                color: Qt.alpha(Theme.chrome, 0.6)
+                opacity: window.controlsHidden && window.editor.hasMedia && osdTimer.running ? 1 : 0
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                Rectangle {
+                    height: parent.height
+                    width: window.editor.duration > 0
+                        ? parent.width * Math.min(1, window.position / window.editor.duration) : 0
+                    color: Theme.accent
+                }
+            }
+
             // Empty state
             Column {
                 anchors.centerIn: parent
