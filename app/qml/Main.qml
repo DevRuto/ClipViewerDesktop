@@ -44,6 +44,13 @@ ApplicationWindow {
         player.position = Math.round(t * 1000)
         if (!playing)
             editor.requestStill(t)
+        flashOsd()
+    }
+
+    // While the controls are hidden, play/pause and seeks briefly show the time over the video.
+    function flashOsd() {
+        if (controlsHidden)
+            osdTimer.restart()
     }
 
     function play() {
@@ -67,6 +74,7 @@ ApplicationWindow {
             pause()
         else
             play()
+        flashOsd()
     }
 
     function stepFrames(frames) {
@@ -195,6 +203,8 @@ ApplicationWindow {
     Shortcut { sequence: "Down"; onActivated: window.changeVolume(-0.05) }
     Shortcut { sequence: "F"; onActivated: window.toggleFullScreen() }
     Shortcut { sequence: "Ctrl+H"; onActivated: window.controlsHidden = !window.controlsHidden }
+
+    Timer { id: osdTimer; interval: 1500 }
     Shortcut { sequence: "Esc"; enabled: window.fullScreen; onActivated: window.toggleFullScreen() }
 
     DropArea {
@@ -288,6 +298,45 @@ ApplicationWindow {
                     window.togglePlay()
                     if (action !== 0)
                         window.skip(action === 1 ? -10 : 10)
+                }
+            }
+
+            // Time overlay while the controls are hidden (see flashOsd)
+            Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.margins: 16
+                width: osdRow.implicitWidth + 24
+                height: osdRow.implicitHeight + 14
+                radius: 6
+                color: Qt.alpha(Theme.chrome, 0.8)
+                opacity: window.controlsHidden && window.editor.hasMedia && osdTimer.running ? 1 : 0
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                Row {
+                    id: osdRow
+                    anchors.centerIn: parent
+                    spacing: 8
+                    Icon {
+                        anchors.verticalCenter: parent.verticalCenter
+                        name: window.playing ? "play" : "pause"
+                        size: 16
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: window.editor.formatTime(window.position)
+                        color: Theme.text
+                        font.family: Theme.monoFont
+                        font.pixelSize: 16
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "/ " + window.editor.formatTime(window.editor.duration)
+                        color: Theme.text3
+                        font.family: Theme.monoFont
+                        font.pixelSize: 16
+                    }
                 }
             }
 
