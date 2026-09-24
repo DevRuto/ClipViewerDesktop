@@ -56,8 +56,8 @@ jobs:
       - name: Install CMake and Ninja
         run: pip install cmake ninja
 
-      # The release preset downloads and bundles the pinned FFmpeg build. The CI workflows run the
-      # tests on every push, including this tag.
+      # The release preset downloads and bundles the pinned FFmpeg build. Tests are off: the tagged
+      # commit already went through the Windows and Linux CI workflows when it was pushed.
       - name: Configure
         run: cmake --preset release -DCLIPVIEWER_BUILD_TESTS=OFF
 

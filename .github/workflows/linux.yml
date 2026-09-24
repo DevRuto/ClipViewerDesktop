@@ -1,7 +1,9 @@
 name: Linux
 
 on:
+  # Branches only: a release tag points at a commit these already tested.
   push:
+    branches: ['**']
   pull_request:
   workflow_dispatch:
 
