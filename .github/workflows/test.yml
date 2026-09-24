@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  windows:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
@@ -44,3 +44,46 @@ jobs:
 
       - name: Test
         run: ctest --preset debug
+
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies and FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg \
+            libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libfontconfig1-dev libfreetype-dev
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.10.3
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          modules: qtmultimedia qtshadertools qtimageformats
+          cache: true
+
+      # The unix presets find Qt through QT_ROOT.
+      - name: Set QT_ROOT
+        run: echo "QT_ROOT=$QT_ROOT_DIR" >> "$GITHUB_ENV"
+
+      # The system Python refuses pip installs (PEP 668).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install CMake and Ninja
+        run: pip install cmake ninja
+
+      - name: Configure
+        run: cmake --preset unix-debug
+
+      - name: Build
+        run: cmake --build --preset unix-debug
+
+      - name: Test
+        run: ctest --preset unix-debug
