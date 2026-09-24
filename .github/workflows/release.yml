@@ -37,7 +37,7 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install Qt and MinGW
         uses: jurplel/install-qt-action@v4
@@ -91,7 +91,7 @@ jobs:
               "/DSourceDir=$PWD\dist" "/DOutputDir=$PWD\out" packaging\windows\ClipViewerDesktop.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: windows-x64
           path: out/*
@@ -104,7 +104,7 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install build dependencies
         run: |
@@ -125,7 +125,7 @@ jobs:
       - name: Set QT_ROOT
         run: echo "QT_ROOT=$QT_ROOT_DIR" >> "$GITHUB_ENV"
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
 
@@ -166,7 +166,7 @@ jobs:
           chmod +x appimagetool
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir "out/ClipViewerDesktop-$VERSION-linux-x64.AppImage"
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-x64
           path: out/*
@@ -178,16 +178,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-15
+          - runner: macos-26
             arch: arm64
-          - runner: macos-15-intel
+          - runner: macos-26-intel
             arch: x64
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -202,7 +202,7 @@ jobs:
       - name: Set QT_ROOT
         run: echo "QT_ROOT=$QT_ROOT_DIR" >> "$GITHUB_ENV"
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
 
@@ -241,7 +241,7 @@ jobs:
           hdiutil create -volname "ClipViewer Desktop" -srcfolder stage -fs HFS+ -format UDZO -ov "out/$name.dmg"
           ditto -c -k --keepParent dist/ClipViewerDesktop.app "out/$name.zip"
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: macos-${{ matrix.arch }}
           path: out/*
@@ -259,7 +259,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       TAG: ${{ github.ref_name }}
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           path: release
           merge-multiple: true

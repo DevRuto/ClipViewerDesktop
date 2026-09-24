@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install build dependencies and FFmpeg
         run: |
@@ -37,7 +37,7 @@ jobs:
         run: echo "QT_ROOT=$QT_ROOT_DIR" >> "$GITHUB_ENV"
 
       # The system Python refuses pip installs (PEP 668).
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
 
