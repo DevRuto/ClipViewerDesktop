@@ -32,9 +32,19 @@ jobs:
       - name: Install CMake and Ninja
         run: pip install cmake ninja
 
-      # tst_ffmpegintegration skips itself without ffmpeg on PATH.
+      # tst_ffmpegintegration skips itself without ffmpeg. Uses the build pinned in
+      # cmake/BundleFfmpeg.cmake, not Chocolatey's: its ffmpeg.exe is a launcher shim, and killing
+      # the shim on cancel leaves the real ffmpeg running and holding the output file.
       - name: Install FFmpeg
-        run: choco install ffmpeg -y --no-progress
+        shell: pwsh
+        run: |
+          $name = 'ffmpeg-9.0.2-essentials_build'
+          $zip = "$env:RUNNER_TEMP\$name.zip"
+          Invoke-WebRequest "https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/$name.zip" -OutFile $zip
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
+          if ($hash -ne '60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba') { throw "Unexpected SHA-256: $hash" }
+          Expand-Archive $zip -DestinationPath $env:RUNNER_TEMP
+          "CLIPVIEWER_FFMPEG_DIR=$env:RUNNER_TEMP\$name\bin" >> $env:GITHUB_ENV
 
       - name: Configure
         run: cmake --preset debug
