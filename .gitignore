@@ -1,0 +1,18 @@
+# Build output
+build/
+dist/
+publish/
+CMakeUserPresets.json
+
+# Editors
+.vs/
+.idea/
+.cache/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+*.user
+
+# Local test videos
+sample/
