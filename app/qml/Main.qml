@@ -19,6 +19,8 @@ ApplicationWindow {
     property bool previewing: false
     property bool resumeAfterScrub: false
     readonly property bool fullScreen: visibility === Window.FullScreen
+    // The window opens as a plain player; edit mode (E, or the toggle top right) adds the trim controls.
+    property bool editMode: false
 
     width: 1180
     height: 760
@@ -85,6 +87,14 @@ ApplicationWindow {
         player.play()
     }
 
+    function toggleEditMode() {
+        if (editMode && previewing) {
+            previewing = false
+            pause()
+        }
+        editMode = !editMode
+    }
+
     function toggleFullScreen() {
         visibility = fullScreen ? Window.Windowed : Window.FullScreen
     }
@@ -99,7 +109,7 @@ ApplicationWindow {
     }
 
     function exportClip() {
-        if (!editor.hasMedia || editor.exporting)
+        if (!editMode || !editor.hasMedia || editor.exporting)
             return
         saveDialog.selectedFile = editor.suggestedExportUrl()
         saveDialog.open()
@@ -166,13 +176,18 @@ ApplicationWindow {
     Shortcut { sequence: "L"; onActivated: window.skip(10) }
     Shortcut { sequence: ","; onActivated: window.stepFrames(-1) }
     Shortcut { sequence: "."; onActivated: window.stepFrames(1) }
-    Shortcut { sequence: "I"; onActivated: window.editor.setStartHere(window.position) }
-    Shortcut { sequence: "O"; onActivated: window.editor.setEndHere(window.position) }
-    Shortcut { sequence: "P"; onActivated: window.previewCut() }
-    Shortcut { sequence: "Home"; onActivated: window.seekTo(window.editor.trimStart) }
-    Shortcut { sequence: "End"; onActivated: window.seekTo(window.editor.trimEnd) }
+    Shortcut { sequence: "E"; onActivated: window.toggleEditMode() }
+    Shortcut { sequence: "I"; enabled: window.editMode; onActivated: window.editor.setStartHere(window.position) }
+    Shortcut { sequence: "O"; enabled: window.editMode; onActivated: window.editor.setEndHere(window.position) }
+    Shortcut { sequence: "P"; enabled: window.editMode; onActivated: window.previewCut() }
+    // Home/End jump to the trim points in edit mode, and to the ends of the video otherwise.
+    Shortcut { sequence: "Home"; onActivated: window.seekTo(window.editMode ? window.editor.trimStart : 0) }
+    Shortcut {
+        sequence: "End"
+        onActivated: window.seekTo(window.editMode ? window.editor.trimEnd : window.editor.duration - window.editor.frameDuration)
+    }
     Shortcut { sequence: "Ctrl+O"; onActivated: window.showOpenDialog() }
-    Shortcut { sequence: "Ctrl+E"; onActivated: window.exportClip() }
+    Shortcut { sequence: "Ctrl+E"; enabled: window.editMode; onActivated: window.exportClip() }
     Shortcut { sequence: "M"; onActivated: window.editor.muted = !window.editor.muted }
     Shortcut { sequence: "Up"; onActivated: window.changeVolume(0.05) }
     Shortcut { sequence: "Down"; onActivated: window.changeVolume(-0.05) }
@@ -225,6 +240,13 @@ ApplicationWindow {
                     font.pixelSize: 12
                     elide: Text.ElideRight
                     Layout.fillWidth: true
+                }
+                AppButton {
+                    iconName: "scissors"
+                    text: "Edit"
+                    checked: window.editMode // not checkable, so a click can't break the binding
+                    toolTip: window.editMode ? "Back to the player (E)" : "Trim and export (E)"
+                    onClicked: window.toggleEditMode()
                 }
             }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.border }
@@ -394,6 +416,7 @@ ApplicationWindow {
 
                     AppButton {
                         Layout.leftMargin: 8
+                        visible: window.editMode
                         iconName: "preview"
                         text: "Preview cut"
                         toolTip: "Play the kept range (P)"
@@ -408,6 +431,7 @@ ApplicationWindow {
                     position: window.position
                     trimStart: window.editor.trimStart
                     trimEnd: window.editor.trimEnd
+                    trimming: window.editMode
 
                     onSeekRequested: seconds => window.seekTo(seconds)
                     onScrubStarted: {
@@ -434,6 +458,7 @@ ApplicationWindow {
 
                 RowLayout {
                     Layout.fillWidth: true
+                    visible: window.editMode
                     spacing: 8
 
                     Text { text: "Start"; color: Theme.text2 }

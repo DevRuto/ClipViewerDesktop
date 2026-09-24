@@ -3,6 +3,7 @@ import QtQuick
 // The trim timeline: the whole video as a track, the kept range highlighted between two draggable
 // amber handles, and the playhead. Pressing near a handle drags it; pressing anywhere else scrubs.
 // It only reports what the user did; the owner snaps the times and moves the values back in.
+// With `trimming` off it's a plain seek bar: no kept range, no handles.
 Item {
     id: root
 
@@ -10,6 +11,7 @@ Item {
     property double position: 0
     property double trimStart: 0
     property double trimEnd: 0
+    property bool trimming: true
 
     signal seekRequested(double seconds)
     signal trimStartDragged(double seconds)
@@ -21,7 +23,7 @@ Item {
     readonly property real trackLeft: handleWidth
     readonly property real trackWidth: Math.max(1, width - 2 * handleWidth)
 
-    implicitHeight: 56
+    implicitHeight: trimming ? 56 : 40
 
     function xFor(seconds) {
         return duration > 0 ? trackLeft + seconds / duration * trackWidth : trackLeft
@@ -52,12 +54,12 @@ Item {
         color: Theme.accentSoft
         border.width: 1
         border.color: Theme.accentLine
-        visible: root.duration > 0
+        visible: root.duration > 0 && root.trimming
     }
 
     // Handles
     Repeater {
-        model: root.duration > 0 ? 2 : 0
+        model: root.duration > 0 && root.trimming ? 2 : 0
         delegate: Rectangle {
             required property int index
             readonly property bool isStart: index === 0
@@ -115,6 +117,8 @@ Item {
             ? Qt.SizeHorCursor : Qt.PointingHandCursor
 
         function nearHandle(x) {
+            if (!root.trimming)
+                return ""
             const toStart = Math.abs(x - (root.xFor(root.trimStart) - root.handleWidth / 2))
             const toEnd = Math.abs(x - (root.xFor(root.trimEnd) + root.handleWidth / 2))
             const reach = root.handleWidth

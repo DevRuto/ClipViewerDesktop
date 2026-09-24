@@ -145,6 +145,9 @@ are MPEG-TS files in a hidden `.<name>.parts-<guid>` folder next to the output, 
   out exact, the still could go, but compare against the export first.
 - `MediaPlayer` state stays in QML. `window.position` is the playhead: the player's position
   while playing, and the frame we sought to while paused.
+- The window opens as a plain player. Edit mode (`window.editMode`, E or the Edit toggle top right)
+  shows the trim handles, start/end fields, preview and export; their shortcuts (I, O, P, Ctrl+E)
+  only work in edit mode. The trim range is kept when switching back and forth.
 - Clicking the video: `EditorController::videoClick` returns the `PlayerClickGesture` action.
   A double-click on an edge undoes the first click's toggle, then seeks 10 s.
 
