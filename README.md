@@ -4,7 +4,10 @@ A local video player with a trim editor. You can open a video, set the start and
 the exact frame, and export that range to a new MP4. It's written in C++20 with Qt 6 (Qt Quick).
 Export and still frames use FFmpeg, run as an external program.
 
-It runs on Windows, Linux and macOS. Windows is the main, tested platform.
+It's built for Windows, Linux and macOS, but only Windows has been tested.
+
+> **Note:** Linux and macOS haven't been tested. CI builds the project on Linux and runs the
+> automated tests there, but nobody has run the app on Linux yet. macOS hasn't been built at all.
 
 ## Requirements
 
