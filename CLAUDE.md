@@ -1,12 +1,12 @@
 # CLAUDE.md
 
-This file guides Claude Code when working in this repository (the `qt` branch).
+This file guides Claude Code when working in this repository (the `main` branch).
 
 ## Project
 
 A local **video player with a trim editor**, in C++ and Qt. Open a video, watch it, set start and
-end points frame-accurately, export that range to a new MP4. See [APP_PURPOSE.md](APP_PURPOSE.md)
-for the product description and the shortcut list.
+end points frame-accurately, export that range to a new MP4. The keyboard shortcuts are defined in
+`app/qml/Main.qml`.
 
 **Scope: a video player with video-edit functionality, nothing else.** No server, accounts,
 upload, clip browser or library. Don't add network code or features outside playing and editing
@@ -25,9 +25,9 @@ unwritable settings file must show a clear message, never crash or freeze the wi
 - After a change, build, run `.\dev.ps1 test`, and launch the app on a real video, as well as a
   missing file and a non-video file.
 
-This branch is a rewrite of an earlier .NET/Avalonia app, which is on `master` in the same repo
+This branch is a rewrite of an earlier .NET/Avalonia app, which is on `avalonia` in the same repo
 (`ClipViewerDesktop.Core/Media/*.cs` there is the reference for the ffmpeg logic). This branch
-started with no history of its own (orphan branch); don't merge `master` into it.
+started with no history of its own (orphan branch); don't merge `avalonia` into it.
 
 ## Stack
 
