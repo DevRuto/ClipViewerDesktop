@@ -1,0 +1,9 @@
+{
+  "cmake.useCMakePresets": "always",
+  "cmake.configureOnOpen": true,
+  "cmake.copyCompileCommands": "${workspaceFolder}/build/compile_commands.json",
+  "clangd.arguments": ["--compile-commands-dir=${workspaceFolder}/build", "--query-driver=C:/Qt/Tools/mingw1310_64/bin/g++.exe"],
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+  "files.associations": { "*.qml": "qml" },
+  "files.exclude": { "build": true, "dist": true }
+}
