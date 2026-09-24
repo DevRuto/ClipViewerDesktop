@@ -203,9 +203,9 @@ ApplicationWindow {
     Shortcut { sequence: "Down"; onActivated: window.changeVolume(-0.05) }
     Shortcut { sequence: "F"; onActivated: window.toggleFullScreen() }
     Shortcut { sequence: "Ctrl+H"; onActivated: window.controlsHidden = !window.controlsHidden }
+    Shortcut { sequence: "Esc"; enabled: window.fullScreen; onActivated: window.toggleFullScreen() }
 
     Timer { id: osdTimer; interval: 1500 }
-    Shortcut { sequence: "Esc"; enabled: window.fullScreen; onActivated: window.toggleFullScreen() }
 
     DropArea {
         anchors.fill: parent
@@ -340,22 +340,59 @@ ApplicationWindow {
                 }
             }
 
-            // Progress line along the bottom, shown with the time overlay
-            Rectangle {
+            // Progress line along the bottom while the controls are hidden; click or drag it to seek.
+            // The hit area is taller than the line, which thickens on hover.
+            Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                height: 3
-                color: Qt.alpha(Theme.chrome, 0.6)
-                opacity: window.controlsHidden && window.editor.hasMedia && osdTimer.running ? 1 : 0
-                visible: opacity > 0
-                Behavior on opacity { NumberAnimation { duration: 150 } }
+                height: 14
+                visible: window.controlsHidden && window.editor.hasMedia
 
                 Rectangle {
-                    height: parent.height
-                    width: window.editor.duration > 0
-                        ? parent.width * Math.min(1, window.position / window.editor.duration) : 0
-                    color: Theme.accent
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: progressArea.containsMouse || progressArea.pressed ? 6 : 3
+                    color: Qt.alpha(Theme.chrome, 0.6)
+                    Behavior on height { NumberAnimation { duration: 100 } }
+
+                    Rectangle {
+                        height: parent.height
+                        width: window.editor.duration > 0
+                            ? parent.width * Math.min(1, window.position / window.editor.duration) : 0
+                        color: Theme.accent
+                    }
+                }
+
+                MouseArea {
+                    id: progressArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+
+                    function seekToMouse(x) {
+                        window.seekTo(Math.max(0, Math.min(1, x / width)) * window.editor.duration)
+                    }
+                    function finishScrub() {
+                        if (window.resumeAfterScrub)
+                            window.play()
+                    }
+
+                    // Paused while dragging, as on the timeline, so each position shows its exact frame
+                    onPressed: mouse => {
+                        window.resumeAfterScrub = window.playing
+                        window.previewing = false
+                        if (window.playing)
+                            player.pause()
+                        seekToMouse(mouse.x)
+                    }
+                    onPositionChanged: mouse => {
+                        if (pressed)
+                            seekToMouse(mouse.x)
+                    }
+                    onReleased: finishScrub()
+                    onCanceled: finishScrub()
                 }
             }
 
