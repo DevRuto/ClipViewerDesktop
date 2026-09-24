@@ -443,12 +443,6 @@ ApplicationWindow {
                         format: seconds => window.editor.formatTime(seconds)
                         commit: text => window.editor.setTrimStartText(text)
                     }
-                    AppButton {
-                        iconName: "start"
-                        toolTip: "Start at the playhead (I)"
-                        enabled: window.editor.hasMedia
-                        onClicked: window.editor.setStartHere(window.position)
-                    }
 
                     Text { text: "End"; color: Theme.text2; Layout.leftMargin: 12 }
                     TimeField {
@@ -456,12 +450,6 @@ ApplicationWindow {
                         value: window.editor.trimEnd
                         format: seconds => window.editor.formatTime(seconds)
                         commit: text => window.editor.setTrimEndText(text)
-                    }
-                    AppButton {
-                        iconName: "end"
-                        toolTip: "End at the playhead (O)"
-                        enabled: window.editor.hasMedia
-                        onClicked: window.editor.setEndHere(window.position)
                     }
 
                     Text {
