@@ -1,0 +1,46 @@
+name: Windows
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same toolchain and location as the README, so the debug preset works unchanged.
+      - name: Install Qt and MinGW
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.10.3
+          host: windows
+          target: desktop
+          arch: win64_mingw
+          modules: qtmultimedia qtshadertools qtimageformats
+          tools: tools_mingw1310,qt.tools.win64_mingw1310
+          dir: 'C:\'
+          cache: true
+
+      - name: Install CMake and Ninja
+        run: pip install cmake ninja
+
+      # tst_ffmpegintegration skips itself without ffmpeg on PATH.
+      - name: Install FFmpeg
+        run: choco install ffmpeg -y --no-progress
+
+      - name: Configure
+        run: cmake --preset debug
+
+      - name: Build
+        run: cmake --build --preset debug
+
+      - name: Test
+        run: ctest --preset debug

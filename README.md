@@ -1,5 +1,8 @@
 # ClipViewer Desktop
 
+[![Windows](https://github.com/DevRuto/ClipViewerDesktop/actions/workflows/windows.yml/badge.svg?branch=main)](https://github.com/DevRuto/ClipViewerDesktop/actions/workflows/windows.yml)
+[![Linux](https://github.com/DevRuto/ClipViewerDesktop/actions/workflows/linux.yml/badge.svg?branch=main)](https://github.com/DevRuto/ClipViewerDesktop/actions/workflows/linux.yml)
+
 A local video player with a trim editor. You can open a video, set the start and end points to
 the exact frame, and export that range to a new MP4. It's written in C++20 with Qt 6 (Qt Quick).
 Export and still frames use FFmpeg, run as an external program.
