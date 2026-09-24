@@ -1,10 +1,27 @@
 name: Windows
 
 on:
-  # Branches only: a release tag points at a commit these already tested.
+  # Branches only: a release tag points at a commit these already tested. Only changes that can
+  # affect the build or the tests start a run (not docs, packaging or editor settings).
   push:
     branches: ['**']
+    paths:
+      - 'app/**'
+      - 'core/**'
+      - 'tests/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+      - '.github/workflows/windows.yml'
   pull_request:
+    paths:
+      - 'app/**'
+      - 'core/**'
+      - 'tests/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+      - '.github/workflows/windows.yml'
   workflow_dispatch:
 
 concurrency:
