@@ -59,7 +59,7 @@ jobs:
       # The release preset downloads and bundles the pinned FFmpeg build. Tests are off: the tagged
       # commit already went through the Windows and Linux CI workflows when it was pushed.
       - name: Configure
-        run: cmake --preset release -DCLIPVIEWER_BUILD_TESTS=OFF
+        run: cmake --preset release -DCLIPVIEWER_BUILD_TESTS=OFF "-DCLIPVIEWER_VERSION=$env:VERSION"
 
       - name: Build
         run: cmake --build --preset release
@@ -137,7 +137,7 @@ jobs:
         run: pip install cmake ninja
 
       - name: Configure
-        run: cmake --preset unix-release -DCLIPVIEWER_BUILD_TESTS=OFF
+        run: cmake --preset unix-release -DCLIPVIEWER_BUILD_TESTS=OFF "-DCLIPVIEWER_VERSION=$VERSION"
 
       - name: Build
         run: cmake --build --preset unix-release
@@ -218,7 +218,7 @@ jobs:
       # Qt's macOS libraries are universal, but the bundled FFmpeg is for one architecture, so
       # each runner builds for its own.
       - name: Configure
-        run: cmake --preset unix-release -DCLIPVIEWER_BUILD_TESTS=OFF
+        run: cmake --preset unix-release -DCLIPVIEWER_BUILD_TESTS=OFF "-DCLIPVIEWER_VERSION=$VERSION"
 
       - name: Build
         run: cmake --build --preset unix-release

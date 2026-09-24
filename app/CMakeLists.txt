@@ -9,6 +9,8 @@ if(WIN32)
     target_sources(ClipViewerDesktop PRIVATE app.rc)
 endif()
 
+target_compile_definitions(ClipViewerDesktop PRIVATE CLIPVIEWER_VERSION="${CLIPVIEWER_VERSION}")
+
 # The generated QML type registrations include the QML_ELEMENT headers by file name.
 target_include_directories(ClipViewerDesktop PRIVATE src)
 

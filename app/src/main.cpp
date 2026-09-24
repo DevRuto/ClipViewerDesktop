@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     QGuiApplication::setApplicationName(QStringLiteral("ClipViewerDesktop"));
+    QGuiApplication::setApplicationVersion(QStringLiteral(CLIPVIEWER_VERSION));
     QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/qt/qml/ClipViewer/assets/app-icon.png")));
 
     // Geist and Geist Mono (OFL), embedded in the QML module's resources.

@@ -28,7 +28,7 @@ ApplicationWindow {
     minimumHeight: 520
     visible: true
     color: Theme.background
-    title: editor.hasMedia ? editor.fileName + " — ClipViewer" : "ClipViewer"
+    title: (editor.hasMedia ? editor.fileName + " — " : "") + "ClipViewer " + Qt.application.version
     font.family: Theme.font
     font.pixelSize: 13
 
