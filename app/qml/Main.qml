@@ -125,7 +125,7 @@ ApplicationWindow {
         onPositionChanged: {
             if (!window.playing)
                 return
-            window.position = position / 1000
+            window.position = player.position / 1000
             if (window.previewing && window.position >= window.editor.trimEnd) {
                 window.previewing = false
                 player.pause()
