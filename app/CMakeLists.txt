@@ -9,7 +9,21 @@ if(WIN32)
     target_sources(ClipViewerDesktop PRIVATE app.rc)
 endif()
 
-target_compile_definitions(ClipViewerDesktop PRIVATE CLIPVIEWER_VERSION="${CLIPVIEWER_VERSION}")
+# Version.h is regenerated on every build, so the version follows new commits and tags without
+# reconfiguring. main.cpp only recompiles when it actually changes.
+find_package(Git QUIET)
+set(version_header "${CMAKE_CURRENT_BINARY_DIR}/generated/Version.h")
+add_custom_target(ClipViewerVersion
+    COMMAND "${CMAKE_COMMAND}"
+        "-DVERSION=${CLIPVIEWER_VERSION}"
+        "-DGIT_EXECUTABLE=${GIT_EXECUTABLE}"
+        "-DSOURCE_DIR=${PROJECT_SOURCE_DIR}"
+        "-DOUTPUT=${version_header}"
+        -P "${PROJECT_SOURCE_DIR}/cmake/GitVersion.cmake"
+    BYPRODUCTS "${version_header}"
+    VERBATIM)
+add_dependencies(ClipViewerDesktop ClipViewerVersion)
+target_include_directories(ClipViewerDesktop PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 # The generated QML type registrations include the QML_ELEMENT headers by file name.
 target_include_directories(ClipViewerDesktop PRIVATE src)

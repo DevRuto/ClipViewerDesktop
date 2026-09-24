@@ -120,6 +120,10 @@ pre-release):
 - macOS arm64 and x64: a `.dmg` and a zipped `.app`, ad-hoc signed only
 - `SHA256SUMS.txt`
 
+The tag is the version; there's no version number to edit in the source. The title bar shows it,
+and other builds show `git describe` (`1.2.3-4-gabc1234` four commits after `v1.2.3`, plus
+`-dirty` with uncommitted changes). `-DCLIPVIEWER_VERSION=...` overrides it.
+
 The release goes out as long as the Windows build succeeds. A failed Linux or macOS build leaves
 its files out. To build the packages without a release, run the workflow by hand from the
 Actions tab; the files are attached to the run as artifacts.

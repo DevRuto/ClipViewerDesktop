@@ -1,6 +1,7 @@
 #include "EditorController.h"
 #include "StartupArgs.h"
 #include "StillFrameProvider.h"
+#include "Version.h"
 
 #include <QDirIterator>
 #include <QFont>
