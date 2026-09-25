@@ -128,6 +128,22 @@ The release goes out as long as the Windows build succeeds. A failed Linux or ma
 its files out. To build the packages without a release, run the workflow by hand from the
 Actions tab; the files are attached to the run as artifacts.
 
+### Code signing
+
+The releases aren't code-signed, and there are no plans to sign them. Signing needs a paid
+certificate (Windows) or Apple Developer membership (macOS). The first time you run the app, the
+OS will warn you:
+
+- **Windows:** SmartScreen says "Windows protected your PC". Click **More info**, then
+  **Run anyway**.
+- **macOS:** the app is only ad-hoc signed and not notarized, so Gatekeeper blocks it. Right-click
+  the app, choose **Open**, then **Open** again. If it says the app is damaged, run
+  `xattr -dr com.apple.quarantine /Applications/ClipViewerDesktop.app`.
+- **Linux:** there's no OS signing to worry about.
+
+To make sure you have an unmodified download, compare its hash against `SHA256SUMS.txt` in the
+release.
+
 ### FFmpeg in the release build
 
 The release presets set `CLIPVIEWER_BUNDLE_FFMPEG=ON`. When you configure, CMake downloads a
@@ -156,6 +172,3 @@ The app looks for FFmpeg in this order: the bundled `ffmpeg/` folder (or `ffmpeg
 the executable, then `%LOCALAPPDATA%\ClipViewerDesktop\ffmpeg` (or the platform's app data
 folder), then PATH. Without FFmpeg, the app still starts and plays videos, but it can't export
 and shows a warning in the status bar.
-
-The macOS bundle isn't code-signed or notarized, so Gatekeeper will block it on other Macs until
-it is.
