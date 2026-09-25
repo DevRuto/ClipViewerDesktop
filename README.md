@@ -172,3 +172,10 @@ The app looks for FFmpeg in this order: the bundled `ffmpeg/` folder (or `ffmpeg
 the executable, then `%LOCALAPPDATA%\ClipViewerDesktop\ffmpeg` (or the platform's app data
 folder), then PATH. Without FFmpeg, the app still starts and plays videos, but it can't export
 and shows a warning in the status bar.
+
+## License
+
+The app's own code is under the [MIT License](LICENSE). Third-party parts keep their own
+licenses: Qt is used under the LGPL v3 (linked dynamically, so its DLLs can be swapped), the
+bundled FFmpeg is GPL (see above), and the Geist fonts are under the SIL Open Font License
+(`app/assets/fonts/OFL.txt`).
