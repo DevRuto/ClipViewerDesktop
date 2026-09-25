@@ -2,6 +2,7 @@
 
 #include "FfmpegPaths.h"
 #include "Process.h"
+#include "ReencodeOptions.h"
 #include "SmartCutPlan.h"
 
 #include <QList>
@@ -29,11 +30,8 @@ struct ExportRequest
     double start = 0;
     double end = 0;
     ExportMode mode = ExportMode::SmartCut;
-    // x264 CRF for Reencode; lower is higher quality.
-    int crf = 18;
-    // x264 preset for Reencode. On a 5-minute 720p60 clip, veryfast at CRF 18 matched the quality
-    // of fast at CRF 20 in about half the time.
-    QString preset = QStringLiteral("veryfast");
+    // Quality, size, frame rate and audio for Reencode (and a smart cut's fallback to it).
+    ReencodeOptions reencode;
 
     double length() const { return end - start; }
 };
@@ -65,8 +63,9 @@ public:
     // Throws std::invalid_argument for a bad range or an output that would overwrite the source.
     static void validate(const ExportRequest &request);
 
-    // The ffmpeg arguments for a Reencode export.
-    static QStringList buildArguments(const ExportRequest &request);
+    // The ffmpeg arguments for a Reencode export. The frame rate limit only applies when
+    // sourceFrameRate is known and above it.
+    static QStringList buildArguments(const ExportRequest &request, double sourceFrameRate = 0);
 
     // Stream-copies a keyframe-to-keyframe segment of the video to MPEG-TS (output path appended
     // by the caller).
@@ -101,7 +100,8 @@ private:
     QList<double> probeKeyframes(const QString &input, double fileStart, double start, double end,
                                  const CancelToken &cancel) const;
     double probeAudioStartTime(const QString &input, const CancelToken &cancel) const;
-    void reencode(const ExportRequest &request, const Progress &progress, const CancelToken &cancel) const;
+    void reencode(const ExportRequest &request, double sourceFrameRate, const Progress &progress,
+                  const CancelToken &cancel) const;
     void smartCut(const ExportRequest &request, const SourceInfo &source, const Progress &progress,
                   const CancelToken &cancel) const;
 

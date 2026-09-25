@@ -114,6 +114,7 @@ private slots:
         AppSettings settings = AppSettings::load(path);
         QCOMPARE(settings.volume, 0.25);
         settings.smartCut = false;
+        settings.reencode.maxHeight = 720;
         settings.lastExportFolder = "D:/exports";
         settings.theme = "paper";
         QVERIFY(settings.save(path));
@@ -123,6 +124,7 @@ private slots:
         const QJsonObject json = QJsonDocument::fromJson(file.readAll()).object();
         QCOMPARE(json.value("futureSetting").toInt(), 42);
         QCOMPARE(json.value("smartCut").toBool(true), false);
+        QCOMPARE(json.value("reencode").toObject().value("maxHeight").toInt(), 720);
         QCOMPARE(json.value("theme").toString(), QString("paper"));
         QCOMPARE(AppSettings::load(path), settings);
     }

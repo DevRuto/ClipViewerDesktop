@@ -14,6 +14,7 @@
 #include <exception>
 #include <future>
 #include <mutex>
+#include <optional>
 
 namespace cv {
 
@@ -56,16 +57,19 @@ ExportResult ClipExporter::exportClip(const ExportRequest &request, const Progre
 
     ExportResult result;
     try {
+        // A re-encode only needs the source's details to know whether the frame rate limit applies.
+        std::optional<SourceInfo> source;
+        if (request.mode == ExportMode::SmartCut || request.reencode.maxFrameRate > 0)
+            source = probeSource(request.inputPath, cancel);
         bool fallback = false;
         if (request.mode == ExportMode::SmartCut) {
-            const SourceInfo source = probeSource(request.inputPath, cancel);
-            result.fallbackReason = smartCutUnsupportedReason(source);
+            result.fallbackReason = smartCutUnsupportedReason(*source);
             fallback = !result.fallbackReason.isEmpty();
             if (!fallback)
-                smartCut(request, source, progress, cancel);
+                smartCut(request, *source, progress, cancel);
         }
         if (request.mode == ExportMode::Reencode || fallback)
-            reencode(request, progress, cancel);
+            reencode(request, source ? source->frameRate : 0, progress, cancel);
     } catch (...) {
         tryDelete(request.outputPath);
         throw;
@@ -91,30 +95,52 @@ void ClipExporter::validate(const ExportRequest &request)
 
 // ---- Re-encode ----
 
-void ClipExporter::reencode(const ExportRequest &request, const Progress &progress, const CancelToken &cancel) const
+void ClipExporter::reencode(const ExportRequest &request, double sourceFrameRate, const Progress &progress,
+                            const CancelToken &cancel) const
 {
     const double total = request.length();
-    runTool(m_paths.ffmpeg, buildArguments(request), cancel, [&](const QString &line) {
+    runTool(m_paths.ffmpeg, buildArguments(request, sourceFrameRate), cancel, [&](const QString &line) {
         const double seconds = parseProgressSeconds(line);
         if (seconds >= 0 && progress)
             progress(std::clamp(seconds / total, 0.0, 1.0));
     });
 }
 
-QStringList ClipExporter::buildArguments(const ExportRequest &request)
+QStringList ClipExporter::buildArguments(const ExportRequest &request, double sourceFrameRate)
 {
+    const ReencodeOptions &options = request.reencode;
     QStringList args = quietArgs();
     args.insert(2, QStringLiteral("-nostats"));
     args << QStringLiteral("-ss") << formatSeconds(request.start) // input seek: fast, and exact when re-encoding
          << QStringLiteral("-i") << request.inputPath
          << QStringLiteral("-t") << formatSeconds(request.length())
          // First video stream and first audio stream if there is one; drop subtitles/data.
-         << QStringLiteral("-map") << QStringLiteral("0:v:0") << QStringLiteral("-map") << QStringLiteral("0:a:0?")
-         << QStringLiteral("-c:v") << QStringLiteral("libx264") << QStringLiteral("-preset") << request.preset
-         << QStringLiteral("-crf") << QString::number(request.crf)
-         << QStringLiteral("-pix_fmt") << QStringLiteral("yuv420p")
-         << QStringLiteral("-c:a") << QStringLiteral("aac") << QStringLiteral("-b:a") << QStringLiteral("192k")
-         << QStringLiteral("-movflags") << QStringLiteral("+faststart")
+         << QStringLiteral("-map") << QStringLiteral("0:v:0");
+    if (options.audioBitrate > 0)
+        args << QStringLiteral("-map") << QStringLiteral("0:a:0?");
+
+    QStringList filters;
+    // Half a frame of slack, so 29.97 isn't "above" 30.
+    if (options.maxFrameRate > 0 && sourceFrameRate > options.maxFrameRate + 0.5)
+        filters << QStringLiteral("fps=%1").arg(options.maxFrameRate);
+    if (options.maxHeight > 0) {
+        // Limits the short side, so an upright video gets the same treatment; -2 keeps the aspect
+        // ratio with an even size.
+        filters << QStringLiteral("scale=w='if(gte(iw,ih),-2,min(%1,iw))':h='if(gte(iw,ih),min(%1,ih),-2)'")
+                       .arg(options.maxHeight);
+    }
+    if (!filters.isEmpty())
+        args << QStringLiteral("-vf") << filters.join(QChar(','));
+
+    args << QStringLiteral("-c:v") << QStringLiteral("libx264") << QStringLiteral("-preset") << options.preset
+         << QStringLiteral("-crf") << QString::number(options.crf)
+         << QStringLiteral("-pix_fmt") << QStringLiteral("yuv420p");
+    if (options.audioBitrate > 0)
+        args << QStringLiteral("-c:a") << QStringLiteral("aac") << QStringLiteral("-b:a")
+             << QStringLiteral("%1k").arg(options.audioBitrate);
+    else
+        args << QStringLiteral("-an");
+    args << QStringLiteral("-movflags") << QStringLiteral("+faststart")
          << QStringLiteral("-progress") << QStringLiteral("pipe:1") << request.outputPath;
     return args;
 }

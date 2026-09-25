@@ -41,6 +41,7 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
   - The tokens come from the current palette (`Theme.name`, the `theme` setting, picked from the
     palette menu in the top bar): Graphite (default), Slate and Plum (dark), Paper, Mist and Sage
     (light). A new palette needs every token; keep grey and accent text at 4.5:1 or better.
+  - A choice between a few options is a `SegmentedControl` (a track with a sliding highlight).
   - Buttons are `AppButton`. The default is raised and outlined. `flat` is the amber main action
     (`flat` + `danger` for a destructive one), `quiet` is borderless (toolbars), and `checkable`
     + `checked` gives a segmented choice. Buttons don't take focus, so keyboard shortcuts keep
@@ -62,13 +63,14 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
   - `AppSettings`: `settings.json` in `%LOCALAPPDATA%\ClipViewerDesktop`. Unknown keys survive
     saving.
   - `media/`: `Process` (`runProcess`/`runTool`, `CancelToken`, error types), `FfmpegPaths`,
-    `MediaProbe`, `FrameGrabber`, `SmartCutPlan` and `ClipExporter`.
+    `MediaProbe`, `FrameGrabber`, `SmartCutPlan`, `ReencodeOptions` and `ClipExporter`.
 - `app/`: the executable (`ClipViewerDesktop.exe`), a QML module with URI `ClipViewer`.
   - `src/EditorController`: all player/editor state and commands exposed to QML (`QML_ELEMENT`,
     passed in as the `editor` required property). `src/StillFrameProvider`: serves the paused
     still frame as `image://still/<n>`. `src/main.cpp`: fonts, style, startup.
   - `qml/Main.qml`: the window, which owns playback (`MediaPlayer`), the shortcuts and the layout.
-    `TrimTimeline.qml`, `TimeField.qml`, `AppButton.qml`, `Icon.qml`, `Theme.qml`.
+    `TrimTimeline.qml`, `TimeField.qml`, `AppButton.qml`, `SegmentedControl.qml`,
+    `ReencodeSettings.qml`, `Icon.qml`, `Theme.qml`.
   - `assets/`: fonts and icons.
 - `tests/`: one Qt Test executable per `tst_*.cpp`. `tst_ffmpegintegration` generates sample
   clips with ffmpeg's `lavfi` sources and checks real exports frame by frame (framemd5). It
@@ -133,8 +135,10 @@ are MPEG-TS files in a hidden `.<name>.parts-<guid>` folder next to the output, 
   Checked in sync to within 0.4 ms by cross-correlating against the source.
 - Keyframe times come from packet flags (`ffprobe -show_entries packet=pts_time,flags`) in 20 s
   windows at each end, converted from absolute to `-ss` time by subtracting `format.start_time`.
-- Re-encode mode is x264 `veryfast` CRF 18 + AAC. `fast` CRF 20 gave the same quality in twice
-  the time. The AMD hardware encoder and parallel chunked encodes were both slower.
+- Re-encode mode defaults to x264 `veryfast` CRF 18 + AAC. `fast` CRF 20 gave the same quality in
+  twice the time. `ReencodeOptions` holds the user's choices from the re-encode settings popup
+  (quality, speed, resolution limit on the short side, frame rate limit, audio). Every field is
+  one of a fixed list; there are no free-form values. The AMD hardware encoder and parallel chunked encodes were both slower.
 - Numbers passed to ffmpeg go through `ClipExporter::formatSeconds` (invariant, 3–6 decimals).
 
 ## Playback and paused frames

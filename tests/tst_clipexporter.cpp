@@ -4,6 +4,7 @@
 #include "media/MediaProbe.h"
 #include "media/SmartCutPlan.h"
 
+#include <QJsonObject>
 #include <QTemporaryFile>
 #include <QTest>
 
@@ -38,24 +39,78 @@ private slots:
     void buildArguments_reencode_usesSettings()
     {
         ExportRequest request{"in.mkv", "out.mp4", 1.5, 4, ExportMode::Reencode};
-        request.crf = 23;
-        request.preset = "slow";
+        request.reencode.crf = 23;
+        request.reencode.preset = "slow";
         const QStringList args = ClipExporter::buildArguments(request);
 
         VERIFY_SEQUENCE(args, "-hide_banner", "-nostdin", "-nostats", "-loglevel", "error", "-y");
         VERIFY_SEQUENCE(args, "-ss", "1.500", "-i", "in.mkv", "-t", "2.500");
+        VERIFY_SEQUENCE(args, "-map", "0:v:0", "-map", "0:a:0?");
         VERIFY_SEQUENCE(args, "-c:v", "libx264", "-preset", "slow", "-crf", "23");
-        VERIFY_SEQUENCE(args, "-c:a", "aac");
+        VERIFY_SEQUENCE(args, "-c:a", "aac", "-b:a", "192k");
         VERIFY_SEQUENCE(args, "-movflags", "+faststart");
         QVERIFY(!args.contains("copy"));
+        QVERIFY(!args.contains("-vf")); // original size and frame rate
         QCOMPARE(args.last(), "out.mp4");
+    }
+
+    void buildArguments_reencode_scalesLimitsFrameRateAndSetsAudio()
+    {
+        ExportRequest request{"in.mkv", "out.mp4", 0, 4, ExportMode::Reencode};
+        request.reencode.maxHeight = 720;
+        request.reencode.maxFrameRate = 30;
+        request.reencode.audioBitrate = 128;
+        const QStringList args = ClipExporter::buildArguments(request, 60);
+        VERIFY_SEQUENCE(args, "-vf",
+                        "fps=30,scale=w='if(gte(iw,ih),-2,min(720,iw))':h='if(gte(iw,ih),min(720,ih),-2)'");
+        VERIFY_SEQUENCE(args, "-c:a", "aac", "-b:a", "128k");
+    }
+
+    void buildArguments_reencode_leavesSlowerFrameRateAlone()
+    {
+        ExportRequest request{"in.mkv", "out.mp4", 0, 4, ExportMode::Reencode};
+        request.reencode.maxFrameRate = 30;
+        QVERIFY(!ClipExporter::buildArguments(request, 29.97).contains("-vf"));
+        QVERIFY(!ClipExporter::buildArguments(request, 0).contains("-vf")); // unknown
+    }
+
+    void buildArguments_reencode_noAudio()
+    {
+        ExportRequest request{"in.mkv", "out.mp4", 0, 4, ExportMode::Reencode};
+        request.reencode.audioBitrate = 0;
+        const QStringList args = ClipExporter::buildArguments(request);
+        QVERIFY(args.contains("-an"));
+        QVERIFY(!args.contains("0:a:0?"));
+        QVERIFY(!args.contains("-c:a"));
     }
 
     void exportRequest_defaultsToVeryfastCrf18()
     {
         const ExportRequest request{"in.mp4", "out.mp4", 0, 1, ExportMode::Reencode};
-        QCOMPARE(request.preset, "veryfast");
-        QCOMPARE(request.crf, 18);
+        QCOMPARE(request.reencode.preset, "veryfast");
+        QCOMPARE(request.reencode.crf, 18);
+        QCOMPARE(request.reencode.maxHeight, 0);
+        QCOMPARE(request.reencode.maxFrameRate, 0);
+        QCOMPARE(request.reencode.audioBitrate, 192);
+    }
+
+    void reencodeOptions_jsonRoundTrip()
+    {
+        ReencodeOptions options;
+        options.crf = 28;
+        options.preset = "medium";
+        options.maxHeight = 480;
+        options.maxFrameRate = 60;
+        options.audioBitrate = 0;
+        QCOMPARE(ReencodeOptions::fromJson(options.toJson()), options);
+    }
+
+    void reencodeOptions_valuesOutsideTheChoices_fallBack()
+    {
+        const QJsonObject json{{"crf", 0},          {"preset", "placebo"}, {"maxHeight", 1080.5},
+                               {"maxFrameRate", "30"}, {"audioBitrate", 64}};
+        QCOMPARE(ReencodeOptions::fromJson(json), ReencodeOptions{});
+        QCOMPARE(ReencodeOptions::fromJson({}), ReencodeOptions{});
     }
 
     void copySegmentArguments_dropsPacketsOutsideSegmentByPts()

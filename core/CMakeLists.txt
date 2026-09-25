@@ -20,6 +20,8 @@ add_library(cvcore STATIC
     src/media/MediaProbe.h
     src/media/Process.cpp
     src/media/Process.h
+    src/media/ReencodeOptions.cpp
+    src/media/ReencodeOptions.h
     src/media/SmartCutPlan.cpp
     src/media/SmartCutPlan.h
 )

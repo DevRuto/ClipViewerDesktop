@@ -16,6 +16,7 @@ namespace {
 const QString Volume = QStringLiteral("volume");
 const QString Muted = QStringLiteral("muted");
 const QString SmartCut = QStringLiteral("smartCut");
+const QString Reencode = QStringLiteral("reencode");
 const QString LastExportFolder = QStringLiteral("lastExportFolder");
 const QString Theme = QStringLiteral("theme");
 
@@ -42,6 +43,7 @@ AppSettings AppSettings::load(const QString &path)
     settings.volume = std::clamp(json.take(Volume).toDouble(settings.volume), 0.0, 1.0);
     settings.muted = json.take(Muted).toBool(settings.muted);
     settings.smartCut = json.take(SmartCut).toBool(settings.smartCut);
+    settings.reencode = ReencodeOptions::fromJson(json.take(Reencode).toObject());
     settings.lastExportFolder = json.take(LastExportFolder).toString();
     settings.theme = json.take(Theme).toString(settings.theme);
     settings.m_unknown = json;
@@ -54,6 +56,7 @@ bool AppSettings::save(const QString &path) const
     json[Volume] = volume;
     json[Muted] = muted;
     json[SmartCut] = smartCut;
+    json[Reencode] = reencode.toJson();
     json[LastExportFolder] = lastExportFolder;
     json[Theme] = theme;
 
@@ -68,7 +71,8 @@ bool AppSettings::save(const QString &path) const
 bool AppSettings::operator==(const AppSettings &other) const
 {
     return volume == other.volume && muted == other.muted && smartCut == other.smartCut
-        && lastExportFolder == other.lastExportFolder && theme == other.theme && m_unknown == other.m_unknown;
+        && reencode == other.reencode && lastExportFolder == other.lastExportFolder && theme == other.theme
+        && m_unknown == other.m_unknown;
 }
 
 } // namespace cv

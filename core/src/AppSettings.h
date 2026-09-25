@@ -1,5 +1,7 @@
 #pragma once
 
+#include "media/ReencodeOptions.h"
+
 #include <QJsonObject>
 #include <QString>
 
@@ -13,6 +15,8 @@ struct AppSettings
     bool muted = false;
     // Export mode: smart cut (true) or re-encode.
     bool smartCut = true;
+    // Settings for re-encoding (the menu next to the export mode).
+    ReencodeOptions reencode;
     // Where the last export went; the save dialog starts there. Empty: next to the source video.
     QString lastExportFolder;
     // Colour palette name (Theme.qml); the UI falls back to Graphite for a name it doesn't know.

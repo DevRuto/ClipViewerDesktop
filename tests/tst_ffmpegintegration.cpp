@@ -154,11 +154,46 @@ private slots:
         QVERIFY(qAbs(info.duration - 2) < 0.1);
     }
 
+    void export_reencode_uprightClip_scalesShortSideAndLimitsFrameRate()
+    {
+        const QString upright = output("upright60.mp4");
+        runTool(paths().ffmpeg,
+                {"-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i",
+                 "testsrc2=size=720x1280:rate=60:duration=1", "-f", "lavfi", "-i", "sine=duration=1", "-c:v",
+                 "libx264", "-preset", "ultrafast", "-c:a", "aac", "-shortest", upright},
+                {});
+        ExportRequest request{upright, output("upright-480p30.mp4"), 0, 1, ExportMode::Reencode};
+        request.reencode.maxHeight = 480;
+        request.reencode.maxFrameRate = 30;
+        request.reencode.audioBitrate = 0;
+        ClipExporter(paths()).exportClip(request);
+
+        const MediaInfo info = MediaProbe(paths()).probe(request.outputPath);
+        QCOMPARE(info.width, 480);
+        QVERIFY2(qAbs(info.height - 853) <= 1 && info.height % 2 == 0, qPrintable(QString::number(info.height)));
+        QVERIFY(qAbs(info.frameRate - 30) < 0.01);
+        QVERIFY(!info.hasAudio());
+    }
+
+    void export_reencode_neverScalesUp()
+    {
+        ExportRequest request{samplePath(), output("no-upscale.mp4"), 0, 1, ExportMode::Reencode};
+        request.reencode.maxHeight = 1080;
+        request.reencode.maxFrameRate = 60; // above the source's 30
+        ClipExporter(paths()).exportClip(request);
+
+        const MediaInfo info = MediaProbe(paths()).probe(request.outputPath);
+        QCOMPARE(info.width, 320);
+        QCOMPARE(info.height, 240);
+        QVERIFY(qAbs(info.frameRate - 30) < 0.01);
+        QCOMPARE(info.audioCodec, "aac");
+    }
+
     void export_cancelled_deletesPartialOutput()
     {
         CancelToken cancel;
         ExportRequest request{samplePath(), output("cancelled.mp4"), 0, 10, ExportMode::Reencode};
-        request.preset = "veryslow";
+        request.reencode.preset = "veryslow";
         QVERIFY_THROWS_EXCEPTION(OperationCancelled, ClipExporter(paths()).exportClip(request, [&](double p) {
             if (p > 0)
                 cancel.cancel();
