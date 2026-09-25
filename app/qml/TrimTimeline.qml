@@ -18,6 +18,8 @@ Item {
     signal trimEndDragged(double seconds)
     signal scrubStarted()
     signal scrubFinished()
+    signal handleDragStarted()
+    signal handleDragFinished()
 
     readonly property int handleWidth: 10
     readonly property real trackLeft: handleWidth
@@ -140,6 +142,8 @@ Item {
             dragging = nearHandle(mouse.x) || "playhead"
             if (dragging === "playhead")
                 root.scrubStarted()
+            else
+                root.handleDragStarted()
             apply(mouse.x)
         }
         onPositionChanged: mouse => {
@@ -149,6 +153,8 @@ Item {
         function finish() {
             if (dragging === "playhead")
                 root.scrubFinished()
+            else if (dragging !== "")
+                root.handleDragFinished()
             dragging = ""
         }
 

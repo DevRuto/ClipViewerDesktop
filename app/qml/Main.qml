@@ -18,6 +18,13 @@ ApplicationWindow {
     // P (preview cut) plays the kept range and stops at its end.
     property bool previewing: false
     property bool resumeAfterScrub: false
+    // While dragging the playhead (or a trim handle, paused) the live video follows the mouse; the exact
+    // still comes on release.
+    property bool scrubbing: false
+    // One player seek at a time while scrubbing: a paused seek decodes from the previous keyframe, and a
+    // new seek drops the unfinished one, so seeking on every mouse move shows nothing until it stops.
+    property bool scrubSeekBusy: false
+    property int scrubSeekPending: -1 // ms, the latest position asked for while a seek was busy
     readonly property bool fullScreen: visibility === Window.FullScreen
     // The window opens as a plain player; edit mode (E, or the toggle top right) adds the trim controls.
     property bool editMode: false
@@ -44,10 +51,62 @@ ApplicationWindow {
             return
         const t = editor.snap(Math.max(0, Math.min(editor.duration, seconds)))
         position = t
-        player.position = Math.round(t * 1000)
-        if (!playing)
+        if (scrubbing)
+            scrubSeek(Math.round(t * 1000))
+        else
+            player.position = Math.round(t * 1000)
+        if (!playing && !scrubbing)
             editor.requestStill(t)
         flashOsd()
+    }
+
+    // Scrubbing pauses, so each position shows a frame. An ffmpeg still per mouse move lags behind,
+    // so the old still is hidden and the live video shown until the drag ends.
+    function beginScrub() {
+        resumeAfterScrub = playing
+        previewing = false
+        if (playing)
+            player.pause()
+        scrubbing = true
+        editor.clearStill()
+    }
+
+    function scrubSeek(ms) {
+        if (scrubSeekBusy) {
+            scrubSeekPending = ms
+            return
+        }
+        scrubSeekPending = -1
+        if (ms === player.position)
+            return // no new frame would come to end the seek
+        scrubSeekBusy = true
+        scrubSeekTimeout.restart()
+        player.position = ms
+    }
+
+    // A frame arrived (or the seek timed out): start the latest waiting seek.
+    function scrubSeekDone() {
+        if (!scrubSeekBusy)
+            return
+        scrubSeekBusy = false
+        scrubSeekTimeout.stop()
+        if (scrubbing && scrubSeekPending >= 0)
+            scrubSeek(scrubSeekPending)
+    }
+
+    function endScrub() {
+        if (!scrubbing)
+            return
+        scrubbing = false
+        scrubSeekBusy = false
+        scrubSeekPending = -1
+        scrubSeekTimeout.stop()
+        if (resumeAfterScrub) {
+            player.position = Math.round(position * 1000) // a waiting seek may not have run
+            play()
+        } else {
+            seekTo(position)
+        }
     }
 
     // While the controls are hidden, play/pause and seeks briefly show the time over the video.
@@ -209,6 +268,8 @@ ApplicationWindow {
     Shortcut { sequence: "Esc"; enabled: window.fullScreen; onActivated: window.toggleFullScreen() }
 
     Timer { id: osdTimer; interval: 1500 }
+    // In case a seek never shows a frame, so scrubbing can't get stuck.
+    Timer { id: scrubSeekTimeout; interval: 1000; onTriggered: window.scrubSeekDone() }
 
     DropArea {
         anchors.fill: parent
@@ -344,6 +405,11 @@ ApplicationWindow {
                 visible: window.editor.hasMedia
             }
 
+            Connections {
+                target: videoOutput.videoSink
+                function onVideoFrameChanged() { window.scrubSeekDone() }
+            }
+
             // The exact frame, decoded by ffmpeg, while paused (see CLAUDE.md, "Paused frames").
             Image {
                 anchors.fill: parent
@@ -440,25 +506,16 @@ ApplicationWindow {
                     function seekToMouse(x) {
                         window.seekTo(Math.max(0, Math.min(1, x / width)) * window.editor.duration)
                     }
-                    function finishScrub() {
-                        if (window.resumeAfterScrub)
-                            window.play()
-                    }
-
-                    // Paused while dragging, as on the timeline, so each position shows its exact frame
                     onPressed: mouse => {
-                        window.resumeAfterScrub = window.playing
-                        window.previewing = false
-                        if (window.playing)
-                            player.pause()
+                        window.beginScrub()
                         seekToMouse(mouse.x)
                     }
                     onPositionChanged: mouse => {
                         if (pressed)
                             seekToMouse(mouse.x)
                     }
-                    onReleased: finishScrub()
-                    onCanceled: finishScrub()
+                    onReleased: window.endScrub()
+                    onCanceled: window.endScrub()
                 }
             }
 
@@ -609,16 +666,14 @@ ApplicationWindow {
                     trimming: window.editMode
 
                     onSeekRequested: seconds => window.seekTo(seconds)
-                    onScrubStarted: {
-                        window.resumeAfterScrub = window.playing
-                        window.previewing = false
-                        if (window.playing)
-                            player.pause()
+                    onScrubStarted: window.beginScrub()
+                    onScrubFinished: window.endScrub()
+                    // A paused handle drag follows the handle like a scrub; while playing it only moves the handle.
+                    onHandleDragStarted: {
+                        if (!window.playing)
+                            window.beginScrub()
                     }
-                    onScrubFinished: {
-                        if (window.resumeAfterScrub)
-                            window.play()
-                    }
+                    onHandleDragFinished: window.endScrub()
                     onTrimStartDragged: seconds => {
                         window.editor.trimStart = seconds
                         if (!window.playing)
