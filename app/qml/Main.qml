@@ -712,37 +712,67 @@ ApplicationWindow {
                     visible: window.editMode
                     spacing: 8
 
-                    AppButton {
-                        iconName: "markStart"
-                        toolTip: "Set start to the current time (I)"
-                        enabled: window.editor.hasMedia
-                        onClicked: window.editor.setStartHere(window.position)
-                    }
-                    Text { text: "Start"; color: Theme.text2 }
-                    TimeField {
-                        enabled: window.editor.hasMedia
-                        value: window.editor.trimStart
-                        format: seconds => window.editor.formatTime(seconds)
-                        commit: text => window.editor.setTrimStartText(text)
+                    // Start and end: a small label above each button + time field pair.
+                    // The rest of the row lines up with the controls, not the labels.
+                    ColumnLayout {
+                        spacing: 3
+
+                        Text {
+                            text: "Start"
+                            color: Theme.text2
+                            font.pixelSize: 11
+                        }
+                        RowLayout {
+                            spacing: 4
+
+                            AppButton {
+                                iconName: "markStart"
+                                toolTip: "Set start to the current time (I)"
+                                enabled: window.editor.hasMedia
+                                onClicked: window.editor.setStartHere(window.position)
+                            }
+                            TimeField {
+                                enabled: window.editor.hasMedia
+                                value: window.editor.trimStart
+                                format: seconds => window.editor.formatTime(seconds)
+                                commit: text => window.editor.setTrimStartText(text)
+                            }
+                        }
                     }
 
-                    Text { text: "End"; color: Theme.text2; Layout.leftMargin: 12 }
-                    TimeField {
-                        enabled: window.editor.hasMedia
-                        value: window.editor.trimEnd
-                        format: seconds => window.editor.formatTime(seconds)
-                        commit: text => window.editor.setTrimEndText(text)
-                    }
-                    AppButton {
-                        iconName: "markEnd"
-                        toolTip: "Set end to the current time (O)"
-                        enabled: window.editor.hasMedia
-                        onClicked: window.editor.setEndHere(window.position)
+                    ColumnLayout {
+                        Layout.leftMargin: 12
+                        spacing: 3
+
+                        Text {
+                            text: "End"
+                            color: Theme.text2
+                            font.pixelSize: 11
+                        }
+                        RowLayout {
+                            spacing: 4
+
+                            TimeField {
+                                enabled: window.editor.hasMedia
+                                value: window.editor.trimEnd
+                                format: seconds => window.editor.formatTime(seconds)
+                                commit: text => window.editor.setTrimEndText(text)
+                            }
+                            AppButton {
+                                iconName: "markEnd"
+                                toolTip: "Set end to the current time (O)"
+                                enabled: window.editor.hasMedia
+                                onClicked: window.editor.setEndHere(window.position)
+                            }
+                        }
                     }
 
                     Text {
                         Layout.leftMargin: 12
                         Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignBottom
+                        Layout.preferredHeight: exportButton.implicitHeight
+                        verticalAlignment: Text.AlignVCenter
                         text: window.editor.clipSummary
                         color: Theme.text3
                         font.family: Theme.monoFont
@@ -752,6 +782,7 @@ ApplicationWindow {
 
                     // Export mode, and the re-encode settings next to it
                     SegmentedControl {
+                        Layout.alignment: Qt.AlignBottom
                         value: window.editor.smartCut
                         model: [
                             { label: "Smart cut", value: true, icon: "zap",
@@ -764,6 +795,7 @@ ApplicationWindow {
                     AppButton {
                         id: reencodeButton
                         Layout.leftMargin: -4
+                        Layout.alignment: Qt.AlignBottom
                         iconName: "sliders"
                         checked: reencodeMenu.visible
                         toolTip: "Re-encode settings"
@@ -797,6 +829,8 @@ ApplicationWindow {
                     }
 
                     AppButton {
+                        id: exportButton
+                        Layout.alignment: Qt.AlignBottom
                         flat: true
                         iconName: "export"
                         text: "Export…"
