@@ -115,6 +115,7 @@ private slots:
         QCOMPARE(settings.volume, 0.25);
         settings.smartCut = false;
         settings.lastExportFolder = "D:/exports";
+        settings.theme = "paper";
         QVERIFY(settings.save(path));
 
         QFile file(path);
@@ -122,16 +123,18 @@ private slots:
         const QJsonObject json = QJsonDocument::fromJson(file.readAll()).object();
         QCOMPARE(json.value("futureSetting").toInt(), 42);
         QCOMPARE(json.value("smartCut").toBool(true), false);
+        QCOMPARE(json.value("theme").toString(), QString("paper"));
         QCOMPARE(AppSettings::load(path), settings);
     }
 
     void settings_invalidValues_fallBack()
     {
         QTemporaryDir dir;
-        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\" }");
+        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\", \"theme\": 3 }");
         const AppSettings settings = AppSettings::load(dir.filePath("s.json"));
         QCOMPARE(settings.volume, 1.0);
         QCOMPARE(settings.muted, false);
+        QCOMPARE(settings.theme, QString("graphite"));
     }
 
     void settings_garbage_givesDefaults()

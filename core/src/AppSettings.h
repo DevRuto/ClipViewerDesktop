@@ -15,6 +15,8 @@ struct AppSettings
     bool smartCut = true;
     // Where the last export went; the save dialog starts there. Empty: next to the source video.
     QString lastExportFolder;
+    // Colour palette name (Theme.qml); the UI falls back to Graphite for a name it doesn't know.
+    QString theme = QStringLiteral("graphite");
 
     // %LOCALAPPDATA%\ClipViewerDesktop\settings.json on Windows.
     static QString defaultPath();

@@ -136,6 +136,15 @@ void EditorController::setMuted(bool value)
     emit mutedChanged();
 }
 
+void EditorController::setTheme(const QString &name)
+{
+    if (m_settings.theme == name)
+        return;
+    m_settings.theme = name;
+    saveSettings();
+    emit themeChanged();
+}
+
 void EditorController::saveSettings()
 {
     m_settingsSave.start(); // a volume drag changes it many times a second

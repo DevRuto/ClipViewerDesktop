@@ -42,6 +42,7 @@ class EditorController : public QObject
     Q_PROPERTY(bool smartCut READ smartCut WRITE setSmartCut NOTIFY smartCutChanged)
     Q_PROPERTY(double volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
+    Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
     Q_PROPERTY(bool exporting READ exporting NOTIFY exportingChanged)
     Q_PROPERTY(double exportProgress READ exportProgress NOTIFY exportProgressChanged)
     Q_PROPERTY(QString status READ status NOTIFY statusChanged)
@@ -71,6 +72,8 @@ public:
     void setVolume(double value);
     bool muted() const { return m_settings.muted; }
     void setMuted(bool value);
+    QString theme() const { return m_settings.theme; }
+    void setTheme(const QString &name);
     bool exporting() const { return m_exporting; }
     double exportProgress() const { return m_exportProgress; }
     QString status() const { return m_status; }
@@ -109,6 +112,7 @@ signals:
     void smartCutChanged();
     void volumeChanged();
     void mutedChanged();
+    void themeChanged();
     void exportingChanged();
     void exportProgressChanged();
     void statusChanged();
