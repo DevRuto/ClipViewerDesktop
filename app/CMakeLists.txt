@@ -34,6 +34,7 @@ qt_add_qml_module(ClipViewerDesktop
     URI ClipViewer
     QML_FILES
         qml/AppButton.qml
+        qml/HoverPreview.qml
         qml/Icon.qml
         qml/Main.qml
         qml/Theme.qml

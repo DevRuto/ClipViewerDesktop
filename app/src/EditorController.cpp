@@ -52,9 +52,9 @@ QString formatBytes(double bytes)
 
 } // namespace
 
-EditorController::EditorController(StillFrameProvider *stills, QObject *parent)
+EditorController::EditorController(StillFrameProvider *stills, StillFrameProvider *thumbnails, QObject *parent)
     : QObject(parent), m_stills(stills), m_paths(cv::FfmpegPaths::locate()),
-      m_settings(cv::AppSettings::load(cv::AppSettings::defaultPath()))
+      m_settings(cv::AppSettings::load(cv::AppSettings::defaultPath())), m_thumbnails(thumbnails)
 {
     m_clock.start();
     m_settingsSave.setSingleShot(true);
@@ -70,6 +70,7 @@ EditorController::~EditorController()
     // Worker threads delete the partial export and stop decoding once they notice.
     m_exportCancel.cancel();
     m_stillCancel.cancel();
+    m_thumbnailCancel.cancel();
     if (m_settingsSave.isActive())
         writeSettings();
 }
@@ -212,6 +213,8 @@ void EditorController::openFile(const QString &pathOrUrl)
             m_trimStart = 0;
             m_trimEnd = m_info->duration;
             clearStill();
+            clearThumbnail();
+            m_thumbnailCache.clear();
             emit mediaChanged();
             emit trimChanged();
             setStatus({});
@@ -334,6 +337,82 @@ void EditorController::clearStill()
         return;
     m_stillSource.clear();
     emit stillChanged();
+}
+
+// ---- Hover thumbnails ----
+
+// Hover times are rounded to steps of about a pixel on a wide timeline, at least a frame and at
+// most a second, so small mouse moves hit the cache.
+double EditorController::thumbnailStep() const
+{
+    return std::clamp(duration() / 1000, frameDuration(), 1.0);
+}
+
+void EditorController::requestThumbnail(double seconds)
+{
+    if (!m_paths || !m_info || !std::isfinite(seconds))
+        return;
+    const qint64 key = std::llround(std::clamp(seconds, 0.0, duration()) / thumbnailStep());
+    if (key == m_thumbnailWanted)
+        return;
+    m_thumbnailWanted = key;
+    if (const QImage *cached = m_thumbnailCache.object(key))
+        showThumbnail(*cached);
+    else if (!m_thumbnailBusy)
+        grabThumbnail(key); // otherwise it starts when the running grab finishes
+}
+
+void EditorController::grabThumbnail(qint64 key)
+{
+    m_thumbnailBusy = true;
+    // The last step can land on the very end, where there's no frame to decode.
+    const double seconds = std::max(0.0, std::min(key * thumbnailStep(), duration() - frameDuration()));
+    const quint64 generation = m_thumbnailGeneration;
+
+    runInBackground(
+        this,
+        [paths = *m_paths, path = m_info->path, seconds, cancel = m_thumbnailCancel]() -> QImage {
+            try {
+                return cv::FrameGrabber(paths).grab(path, seconds, 320, cancel);
+            } catch (const std::exception &) {
+                return {}; // cancelled, or no frame there
+            }
+        },
+        [this, key, generation](QImage frame) {
+            if (generation != m_thumbnailGeneration)
+                return; // the hover ended or the video changed meanwhile
+            m_thumbnailBusy = false;
+            if (!frame.isNull()) {
+                m_thumbnailCache.insert(key, new QImage(frame), frame.sizeInBytes());
+                showThumbnail(frame); // even if the mouse has moved on: it's the closest frame so far
+            }
+            if (m_thumbnailWanted < 0 || m_thumbnailWanted == key)
+                return;
+            if (const QImage *cached = m_thumbnailCache.object(m_thumbnailWanted))
+                showThumbnail(*cached);
+            else
+                grabThumbnail(m_thumbnailWanted);
+        });
+}
+
+void EditorController::showThumbnail(const QImage &frame)
+{
+    m_thumbnails->setFrame(frame);
+    m_thumbnailSource = QUrl(QStringLiteral("image://thumb/%1").arg(++m_thumbnailSerial));
+    emit thumbnailChanged();
+}
+
+void EditorController::clearThumbnail()
+{
+    m_thumbnailCancel.cancel();
+    m_thumbnailCancel = cv::CancelToken();
+    ++m_thumbnailGeneration;
+    m_thumbnailBusy = false;
+    m_thumbnailWanted = -1;
+    if (m_thumbnailSource.isEmpty())
+        return;
+    m_thumbnailSource.clear();
+    emit thumbnailChanged();
 }
 
 // ---- Clicks ----

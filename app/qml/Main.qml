@@ -473,7 +473,7 @@ ApplicationWindow {
             }
 
             // Progress line along the bottom while the controls are hidden; click or drag it to seek.
-            // The hit area is taller than the line, which thickens on hover.
+            // The hit area is taller than the line, which thickens on hover and shows a preview.
             Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -503,19 +503,36 @@ ApplicationWindow {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
 
-                    function seekToMouse(x) {
-                        window.seekTo(Math.max(0, Math.min(1, x / width)) * window.editor.duration)
+                    readonly property bool hovering: containsMouse && !pressed
+
+                    function secondsAt(x) {
+                        return Math.max(0, Math.min(1, x / width)) * window.editor.duration
                     }
                     onPressed: mouse => {
                         window.beginScrub()
-                        seekToMouse(mouse.x)
+                        window.seekTo(secondsAt(mouse.x))
                     }
                     onPositionChanged: mouse => {
                         if (pressed)
-                            seekToMouse(mouse.x)
+                            window.seekTo(secondsAt(mouse.x))
+                        else
+                            window.editor.requestThumbnail(secondsAt(mouse.x))
+                    }
+                    onHoveringChanged: {
+                        if (hovering)
+                            window.editor.requestThumbnail(secondsAt(mouseX))
+                        else
+                            window.editor.clearThumbnail()
                     }
                     onReleased: window.endScrub()
                     onCanceled: window.endScrub()
+                }
+
+                HoverPreview {
+                    visible: progressArea.hovering
+                    source: window.editor.thumbnailSource
+                    time: window.editor.formatShortTime(progressArea.secondsAt(progressArea.mouseX))
+                    pointerX: progressArea.mouseX
                 }
             }
 
@@ -664,7 +681,11 @@ ApplicationWindow {
                     trimStart: window.editor.trimStart
                     trimEnd: window.editor.trimEnd
                     trimming: window.editMode
+                    thumbnailSource: window.editor.thumbnailSource
+                    formatTime: seconds => window.editor.formatShortTime(seconds)
 
+                    onHoverMoved: seconds => window.editor.requestThumbnail(seconds)
+                    onHoverEnded: window.editor.clearThumbnail()
                     onSeekRequested: seconds => window.seekTo(seconds)
                     onScrubStarted: window.beginScrub()
                     onScrubFinished: window.endScrub()

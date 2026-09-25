@@ -7,7 +7,9 @@
 #include "media/MediaInfo.h"
 #include "media/Process.h"
 
+#include <QCache>
 #include <QElapsedTimer>
+#include <QImage>
 #include <QObject>
 #include <QTimer>
 #include <QUrl>
@@ -47,9 +49,10 @@ class EditorController : public QObject
     Q_PROPERTY(double exportProgress READ exportProgress NOTIFY exportProgressChanged)
     Q_PROPERTY(QString status READ status NOTIFY statusChanged)
     Q_PROPERTY(QUrl stillSource READ stillSource NOTIFY stillChanged)
+    Q_PROPERTY(QUrl thumbnailSource READ thumbnailSource NOTIFY thumbnailChanged)
 
 public:
-    explicit EditorController(StillFrameProvider *stills, QObject *parent = nullptr);
+    EditorController(StillFrameProvider *stills, StillFrameProvider *thumbnails, QObject *parent = nullptr);
     ~EditorController() override;
 
     bool ffmpegFound() const { return m_paths.has_value(); }
@@ -78,6 +81,7 @@ public:
     double exportProgress() const { return m_exportProgress; }
     QString status() const { return m_status; }
     QUrl stillSource() const { return m_stillSource; }
+    QUrl thumbnailSource() const { return m_thumbnailSource; }
 
     // Opens a local video (path or file:// URL): probes it, then hands it to the player.
     Q_INVOKABLE void openFile(const QString &pathOrUrl);
@@ -96,6 +100,11 @@ public:
     // request wins). clearStill hides it again, e.g. when playback starts.
     Q_INVOKABLE void requestStill(double seconds);
     Q_INVOKABLE void clearStill();
+    // The timeline's hover preview: a small frame near `seconds` as thumbnailSource. One grab runs
+    // at a time and only the latest request waits behind it, so the preview keeps up with the
+    // mouse; frames are cached per video. clearThumbnail hides it when the mouse leaves.
+    Q_INVOKABLE void requestThumbnail(double seconds);
+    Q_INVOKABLE void clearThumbnail();
     // What a click at x (0-1 across the video) does: 0 toggle play, 1 undo toggle and seek back,
     // 2 undo toggle and seek forward. See PlayerClickGesture.
     Q_INVOKABLE int videoClick(double x);
@@ -117,6 +126,7 @@ signals:
     void exportProgressChanged();
     void statusChanged();
     void stillChanged();
+    void thumbnailChanged();
 
 private:
     void setStatus(const QString &status);
@@ -124,6 +134,9 @@ private:
     double minClip() const;
     void saveSettings(); // debounced
     void writeSettings();
+    double thumbnailStep() const;
+    void grabThumbnail(qint64 key);
+    void showThumbnail(const QImage &frame);
 
     StillFrameProvider *m_stills;
     std::optional<cv::FfmpegPaths> m_paths;
@@ -141,6 +154,14 @@ private:
     QUrl m_stillSource;
     quint64 m_stillGeneration = 0;
     cv::CancelToken m_stillCancel;
+    StillFrameProvider *m_thumbnails;
+    QUrl m_thumbnailSource;
+    quint64 m_thumbnailSerial = 0;
+    quint64 m_thumbnailGeneration = 0; // bumped when the hover ends or the video changes
+    cv::CancelToken m_thumbnailCancel;
+    bool m_thumbnailBusy = false;
+    qint64 m_thumbnailWanted = -1; // the step under the mouse, or -1
+    QCache<qint64, QImage> m_thumbnailCache{64 << 20}; // cost in bytes
     cv::PlayerClickGesture m_clickGesture;
     QElapsedTimer m_clock;
 };

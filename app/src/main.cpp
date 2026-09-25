@@ -31,11 +31,13 @@ int main(int argc, char *argv[])
 
     const cv::StartupArgs args = cv::StartupArgs::parse(app.arguments().mid(1));
 
-    // The editor outlives the engine, whose QML binds to it; the engine owns the image provider.
+    // The editor outlives the engine, whose QML binds to it; the engine owns the image providers.
     auto *stills = new StillFrameProvider;
-    EditorController editor(stills);
+    auto *thumbnails = new StillFrameProvider;
+    EditorController editor(stills, thumbnails);
     QQmlApplicationEngine engine;
     engine.addImageProvider(QStringLiteral("still"), stills);
+    engine.addImageProvider(QStringLiteral("thumb"), thumbnails);
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app,
                      [] { QCoreApplication::exit(-1); }, Qt::QueuedConnection);

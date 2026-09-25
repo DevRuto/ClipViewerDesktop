@@ -3,7 +3,8 @@ import QtQuick
 // The trim timeline: the whole video as a track, the kept range highlighted between two draggable
 // amber handles, and the playhead. Pressing near a handle drags it; pressing anywhere else scrubs.
 // It only reports what the user did; the owner snaps the times and moves the values back in.
-// With `trimming` off it's a plain seek bar: no kept range, no handles.
+// With `trimming` off it's a plain seek bar: no kept range, no handles. Hovering shows a preview
+// above the mouse: the owner answers hoverMoved with a thumbnailSource.
 Item {
     id: root
 
@@ -12,6 +13,8 @@ Item {
     property double trimStart: 0
     property double trimEnd: 0
     property bool trimming: true
+    property url thumbnailSource
+    property var formatTime: seconds => ""
 
     signal seekRequested(double seconds)
     signal trimStartDragged(double seconds)
@@ -20,6 +23,8 @@ Item {
     signal scrubFinished()
     signal handleDragStarted()
     signal handleDragFinished()
+    signal hoverMoved(double seconds)
+    signal hoverEnded()
 
     readonly property int handleWidth: 10
     readonly property real trackLeft: handleWidth
@@ -149,6 +154,17 @@ Item {
         onPositionChanged: mouse => {
             if (pressed)
                 apply(mouse.x)
+            else
+                root.hoverMoved(root.secondsAt(mouse.x))
+        }
+
+        // No preview while dragging: the video itself follows the mouse then.
+        readonly property bool hovering: containsMouse && !pressed
+        onHoveringChanged: {
+            if (hovering)
+                root.hoverMoved(root.secondsAt(mouseX))
+            else
+                root.hoverEnded()
         }
         function finish() {
             if (dragging === "playhead")
@@ -160,5 +176,12 @@ Item {
 
         onReleased: finish()
         onCanceled: finish()
+    }
+
+    HoverPreview {
+        visible: dragArea.hovering
+        source: root.thumbnailSource
+        time: root.formatTime(root.secondsAt(dragArea.mouseX))
+        pointerX: dragArea.mouseX
     }
 }
