@@ -712,18 +712,18 @@ ApplicationWindow {
                     visible: window.editMode
                     spacing: 8
 
+                    AppButton {
+                        iconName: "markStart"
+                        toolTip: "Set start to the current time (I)"
+                        enabled: window.editor.hasMedia
+                        onClicked: window.editor.setStartHere(window.position)
+                    }
                     Text { text: "Start"; color: Theme.text2 }
                     TimeField {
                         enabled: window.editor.hasMedia
                         value: window.editor.trimStart
                         format: seconds => window.editor.formatTime(seconds)
                         commit: text => window.editor.setTrimStartText(text)
-                    }
-                    AppButton {
-                        iconName: "markStart"
-                        toolTip: "Set start to the current time (I)"
-                        enabled: window.editor.hasMedia
-                        onClicked: window.editor.setStartHere(window.position)
                     }
 
                     Text { text: "End"; color: Theme.text2; Layout.leftMargin: 12 }
