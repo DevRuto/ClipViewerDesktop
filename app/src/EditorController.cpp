@@ -8,6 +8,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QJsonObject>
 #include <QPointer>
 #include <QThreadPool>
 
@@ -116,6 +117,27 @@ void EditorController::setSmartCut(bool value)
     m_settings.smartCut = value;
     saveSettings();
     emit smartCutChanged();
+}
+
+void EditorController::setReencodeOption(const QString &key, const QVariant &value)
+{
+    QJsonObject json = m_settings.reencode.toJson();
+    json.insert(key, QJsonValue::fromVariant(value));
+    setReencode(cv::ReencodeOptions::fromJson(json));
+}
+
+void EditorController::resetReencode()
+{
+    setReencode({});
+}
+
+void EditorController::setReencode(const cv::ReencodeOptions &options)
+{
+    if (m_settings.reencode == options)
+        return;
+    m_settings.reencode = options;
+    saveSettings();
+    emit reencodeChanged();
 }
 
 void EditorController::setVolume(double value)
@@ -446,7 +468,8 @@ void EditorController::exportTo(const QUrl &destination)
         output += QLatin1String(cv::ClipExporter::OutputExtension);
 
     cv::ExportRequest request{m_info->path, output, m_trimStart, m_trimEnd,
-                              m_settings.smartCut ? cv::ExportMode::SmartCut : cv::ExportMode::Reencode};
+                              m_settings.smartCut ? cv::ExportMode::SmartCut : cv::ExportMode::Reencode,
+                              m_settings.reencode};
     m_exportCancel = cv::CancelToken();
     m_exporting = true;
     m_exportProgress = 0;

@@ -42,6 +42,9 @@ class EditorController : public QObject
     Q_PROPERTY(double trimEnd READ trimEnd WRITE setTrimEnd NOTIFY trimChanged)
     Q_PROPERTY(QString clipSummary READ clipSummary NOTIFY trimChanged)
     Q_PROPERTY(bool smartCut READ smartCut WRITE setSmartCut NOTIFY smartCutChanged)
+    // The re-encode settings as { crf, preset, maxHeight, maxFrameRate, audioBitrate }; see cv::ReencodeOptions.
+    Q_PROPERTY(QVariantMap reencode READ reencode NOTIFY reencodeChanged)
+    Q_PROPERTY(bool reencodeIsDefault READ reencodeIsDefault NOTIFY reencodeChanged)
     Q_PROPERTY(double volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
@@ -71,6 +74,8 @@ public:
     QString clipSummary() const;
     bool smartCut() const { return m_settings.smartCut; }
     void setSmartCut(bool value);
+    QVariantMap reencode() const { return m_settings.reencode.toJson().toVariantMap(); }
+    bool reencodeIsDefault() const { return m_settings.reencode == cv::ReencodeOptions{}; }
     double volume() const { return m_settings.volume; }
     void setVolume(double value);
     bool muted() const { return m_settings.muted; }
@@ -113,12 +118,16 @@ public:
     Q_INVOKABLE void exportTo(const QUrl &destination);
     Q_INVOKABLE void cancelExport();
     Q_INVOKABLE void clearStatus() { setStatus({}); }
+    // Sets one re-encode setting; a value that isn't one of its choices falls back to the default.
+    Q_INVOKABLE void setReencodeOption(const QString &key, const QVariant &value);
+    Q_INVOKABLE void resetReencode();
 
 signals:
     void mediaChanged();
     void loadingChanged();
     void trimChanged();
     void smartCutChanged();
+    void reencodeChanged();
     void volumeChanged();
     void mutedChanged();
     void themeChanged();
@@ -130,6 +139,7 @@ signals:
 
 private:
     void setStatus(const QString &status);
+    void setReencode(const cv::ReencodeOptions &options);
     void setTrimRange(double start, double end);
     double minClip() const;
     void saveSettings(); // debounced

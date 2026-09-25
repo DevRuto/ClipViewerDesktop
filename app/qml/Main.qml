@@ -750,22 +750,49 @@ ApplicationWindow {
                         elide: Text.ElideRight
                     }
 
-                    // Export mode, as a segmented pair
-                    Row {
-                        spacing: 0
-                        AppButton {
-                            text: "Smart cut"
-                            checkable: true
-                            checked: window.editor.smartCut
-                            toolTip: "Frame-accurate and near-instant: re-encodes only the ends, copies the rest"
-                            onClicked: window.editor.smartCut = true
+                    // Export mode, and the re-encode settings next to it
+                    SegmentedControl {
+                        value: window.editor.smartCut
+                        model: [
+                            { label: "Smart cut", value: true, icon: "zap",
+                              toolTip: "Frame-accurate and near-instant: re-encodes only the ends, copies the rest" },
+                            { label: "Re-encode", value: false, icon: "reencode",
+                              toolTip: "Re-encode everything (x264): slower, usually a smaller file" }
+                        ]
+                        onActivated: value => window.editor.smartCut = value
+                    }
+                    AppButton {
+                        id: reencodeButton
+                        Layout.leftMargin: -4
+                        iconName: "sliders"
+                        checked: reencodeMenu.visible
+                        toolTip: "Re-encode settings"
+                        // Opening the settings picks re-encoding, which is what they apply to.
+                        onClicked: {
+                            if (reencodeMenu.visible) {
+                                reencodeMenu.close()
+                            } else {
+                                window.editor.smartCut = false
+                                reencodeMenu.open()
+                            }
                         }
-                        AppButton {
-                            text: "Re-encode"
-                            checkable: true
-                            checked: !window.editor.smartCut
-                            toolTip: "Re-encode everything (x264): slower, usually a smaller file"
-                            onClicked: window.editor.smartCut = false
+
+                        // Marks settings changed from the defaults
+                        Rectangle {
+                            visible: !window.editor.reencodeIsDefault
+                            x: reencodeButton.width - width - 4
+                            y: 4
+                            width: 6
+                            height: 6
+                            radius: 3
+                            color: Theme.accent
+                        }
+
+                        ReencodeSettings {
+                            id: reencodeMenu
+                            editor: window.editor
+                            x: reencodeButton.width - width
+                            y: -reencodeMenu.height - 8
                         }
                     }
 
