@@ -34,6 +34,9 @@ ApplicationWindow {
     font.family: Theme.font
     font.pixelSize: 13
 
+    // The palette follows the saved setting (Theme falls back to Graphite for an unknown name).
+    Binding { target: Theme; property: "name"; value: window.editor.theme }
+
     // ---- Playback commands ----
 
     function seekTo(seconds) {
@@ -253,6 +256,70 @@ ApplicationWindow {
                     font.pixelSize: 12
                     elide: Text.ElideRight
                     Layout.fillWidth: true
+                }
+                AppButton {
+                    id: themeButton
+                    quiet: true
+                    iconName: "palette"
+                    checked: themeMenu.visible
+                    toolTip: "Theme"
+                    onClicked: themeMenu.visible ? themeMenu.close() : themeMenu.open()
+
+                    Popup {
+                        id: themeMenu
+                        y: themeButton.height + 6
+                        x: themeButton.width - width
+                        padding: 4
+                        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+                        background: Rectangle {
+                            radius: Theme.radius
+                            color: Theme.popup
+                            border.color: Theme.border
+                        }
+
+                        // One row per palette, with a swatch: its background with its accent in the middle
+                        Component {
+                            id: themeItem
+                            AppButton {
+                                id: item
+                                required property string modelData
+                                readonly property var colors: Theme.palettes[modelData]
+                                width: 160
+                                quiet: true
+                                leftPadding: 36
+                                text: colors.label
+                                checked: Theme.name === modelData
+                                onClicked: {
+                                    window.editor.theme = modelData
+                                    themeMenu.close()
+                                }
+
+                                Rectangle {
+                                    x: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 16
+                                    height: 16
+                                    radius: 8
+                                    color: item.colors.background
+                                    border.color: item.colors.controlBorderHover
+                                    Rectangle {
+                                        anchors.centerIn: parent
+                                        width: 8
+                                        height: 8
+                                        radius: 4
+                                        color: item.colors.accent
+                                    }
+                                }
+                            }
+                        }
+
+                        contentItem: Column {
+                            spacing: 2
+                            Repeater { model: Theme.darkNames; delegate: themeItem }
+                            Rectangle { width: parent.width; height: 1; color: Theme.border }
+                            Repeater { model: Theme.lightNames; delegate: themeItem }
+                        }
+                    }
                 }
                 AppButton {
                     iconName: "scissors"

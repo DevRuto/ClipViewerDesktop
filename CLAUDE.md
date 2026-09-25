@@ -38,6 +38,9 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
   - Colours are tokens in the `Theme` singleton (`app/qml/Theme.qml`): `background`, `surface`,
     `raised`, `border`, `text`/`text2`/`text3`, `accent`, … Use them in views, never literal
     colours. Grey text uses `text2`/`text3`, not `opacity`. Monospace is `Theme.monoFont`.
+  - The tokens come from the current palette (`Theme.name`, the `theme` setting, picked from the
+    palette menu in the top bar): Graphite (default), Slate and Plum (dark), Paper, Mist and Sage
+    (light). A new palette needs every token; keep grey and accent text at 4.5:1 or better.
   - Buttons are `AppButton`. The default is raised and outlined. `flat` is the amber main action
     (`flat` + `danger` for a destructive one), `quiet` is borderless (toolbars), and `checkable`
     + `checked` gives a segmented choice. Buttons don't take focus, so keyboard shortcuts keep
