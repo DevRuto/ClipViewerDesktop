@@ -388,6 +388,7 @@ void EditorController::openFile(const QString &pathOrUrl)
             clearStill();
             clearThumbnail();
             m_thumbnailCache.clear();
+            m_stillCache.clear();
             m_subtitles.setMedia(m_paths, &*m_info);
             // Before mediaChanged, so a playback error for the new source isn't cleared
             setStatus({});
@@ -508,6 +509,12 @@ void EditorController::requestStill(double seconds)
     m_stillCancel.cancel(); // the latest request wins
     m_stillCancel = cv::CancelToken();
     const quint64 generation = ++m_stillGeneration;
+    // Stepping back and forth, or between the trim points, shows the same frames again.
+    const qint64 key = std::llround(seconds / frameDuration());
+    if (const QImage *cached = m_stillCache.object(key)) {
+        showStill(*cached, generation);
+        return;
+    }
 
     runInBackground(
         this,
@@ -518,13 +525,19 @@ void EditorController::requestStill(double seconds)
                 return {}; // cancelled, or no frame there: keep showing the live video
             }
         },
-        [this, generation](QImage frame) {
+        [this, key, generation](QImage frame) {
             if (generation != m_stillGeneration || frame.isNull())
                 return;
-            m_stills->setFrame(frame);
-            m_stillSource = QUrl(QStringLiteral("image://still/%1").arg(generation));
-            emit stillChanged();
+            m_stillCache.insert(key, new QImage(frame), frame.sizeInBytes());
+            showStill(frame, generation);
         });
+}
+
+void EditorController::showStill(const QImage &frame, quint64 generation)
+{
+    m_stills->setFrame(frame);
+    m_stillSource = QUrl(QStringLiteral("image://still/%1").arg(generation));
+    emit stillChanged();
 }
 
 void EditorController::clearStill()

@@ -228,6 +228,7 @@ private:
     double thumbnailStep() const;
     void grabThumbnail(qint64 key);
     void showThumbnail(const QImage &frame);
+    void showStill(const QImage &frame, quint64 generation);
 
     StillFrameProvider *m_stills;
     std::optional<cv::FfmpegPaths> m_paths;
@@ -246,6 +247,7 @@ private:
     QUrl m_stillSource;
     quint64 m_stillGeneration = 0;
     cv::CancelToken m_stillCancel;
+    QCache<qint64, QImage> m_stillCache{64 << 20}; // by frame number; cost in bytes (~8 at 1080p)
     cv::CancelToken m_saveFrameCancel; // only cancelled on exit
     StillFrameProvider *m_thumbnails;
     QUrl m_thumbnailSource;
