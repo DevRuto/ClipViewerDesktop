@@ -59,6 +59,10 @@ class EditorController : public QObject
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
     Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
     Q_PROPERTY(bool compact READ compact WRITE setCompact NOTIFY compactChanged)
+    // The UI font family; empty for the style's own. See cv::AppSettings::font.
+    Q_PROPERTY(QString font READ font WRITE setFont NOTIFY fontChanged)
+    // The installed families the font setting offers: ones with Latin letters, not symbol fonts.
+    Q_PROPERTY(QStringList fontFamilies READ fontFamilies CONSTANT)
     Q_PROPERTY(bool alwaysOnTop READ alwaysOnTop WRITE setAlwaysOnTop NOTIFY alwaysOnTopChanged)
     // Click to play/pause, double-click an edge to seek; off leaves clicks on the video alone.
     Q_PROPERTY(bool clickControls READ clickControls WRITE setClickControls NOTIFY clickControlsChanged)
@@ -112,6 +116,9 @@ public:
     void setStyle(const QString &name);
     bool compact() const { return m_settings.compact; }
     void setCompact(bool value);
+    QString font() const { return m_settings.font; }
+    void setFont(const QString &family);
+    QStringList fontFamilies() const;
     bool alwaysOnTop() const { return m_settings.alwaysOnTop; }
     void setAlwaysOnTop(bool value);
     bool clickControls() const { return m_settings.clickControls; }
@@ -196,6 +203,7 @@ signals:
     void themeChanged();
     void styleChanged();
     void compactChanged();
+    void fontChanged();
     void alwaysOnTopChanged();
     void clickControlsChanged();
     void edgeDoubleClickChanged();

@@ -13,6 +13,7 @@
 #include <QDesktopServices>
 #include <QGuiApplication>
 #include <QDir>
+#include <QFontDatabase>
 #include <QFileInfo>
 #include <QJsonObject>
 #include <QLocale>
@@ -209,6 +210,33 @@ void EditorController::setCompact(bool value)
     m_settings.compact = value;
     saveSettings();
     emit compactChanged();
+}
+
+void EditorController::setFont(const QString &family)
+{
+    if (m_settings.font == family)
+        return;
+    m_settings.font = family;
+    saveSettings();
+    emit fontChanged();
+}
+
+QStringList EditorController::fontFamilies() const
+{
+    // Built once: QML reads this from several bindings
+    static const QStringList families = [] {
+        QStringList result;
+        for (const QString &family : QFontDatabase::families()) {
+            // "@..." are Windows' vertical variants; symbol fonts (Marlett, Wingdings) would make
+            // the UI unreadable
+            const QList<QFontDatabase::WritingSystem> systems = QFontDatabase::writingSystems(family);
+            if (!family.startsWith(QLatin1Char('@')) && !QFontDatabase::isPrivateFamily(family)
+                && systems.contains(QFontDatabase::Latin) && !systems.contains(QFontDatabase::Symbol))
+                result.append(family);
+        }
+        return result;
+    }();
+    return families;
 }
 
 void EditorController::setAlwaysOnTop(bool value)

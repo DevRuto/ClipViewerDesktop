@@ -52,6 +52,9 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
     order, falling back to Geist). Popups use `PopupBackground`. `Theme.compact` (the `compact`
     setting) shrinks the controls (`compactHeight`) and the bars (`barHeight`, `statusHeight`,
     `panelPadding`, `panelSpacing`) with any style.
+    The `font` setting (`Theme.fontChoice`, a dropdown in the settings pane of the installed
+    families with Latin letters, `editor.fontFamilies`) overrides the style's UI font; the monospace font stays the style's. Dropdowns are
+    `AppComboBox`.
   - A choice between a few options is a `SegmentedControl` (a track with a sliding highlight).
   - Buttons are `AppButton`. The default is raised and outlined. `flat` is the amber main action
     (`flat` + `danger` for a destructive one), `quiet` is borderless (toolbars), and `checkable`

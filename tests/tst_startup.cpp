@@ -119,6 +119,7 @@ private slots:
         settings.lastFrameFolder = "D:/frames";
         settings.theme = "paper";
         settings.style = "fluent";
+        settings.font = "Segoe UI";
         settings.compact = true;
         settings.alwaysOnTop = true;
         settings.clickControls = false;
@@ -137,6 +138,7 @@ private slots:
         QCOMPARE(json.value("reencode").toObject().value("maxHeight").toInt(), 720);
         QCOMPARE(json.value("theme").toString(), QString("paper"));
         QCOMPARE(json.value("style").toString(), QString("fluent"));
+        QCOMPARE(json.value("font").toString(), QString("Segoe UI"));
         QCOMPARE(json.value("compact").toBool(), true);
         QCOMPARE(json.value("alwaysOnTop").toBool(), true);
         QCOMPARE(json.value("clickControls").toBool(true), false);
@@ -151,13 +153,14 @@ private slots:
     void settings_invalidValues_fallBack()
     {
         QTemporaryDir dir;
-        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\", \"theme\": 3, \"style\": [], \"compact\": \"yes\", \"alwaysOnTop\": 1, \"clickControls\": 0, "
+        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\", \"theme\": 3, \"style\": [], \"font\": 5, \"compact\": \"yes\", \"alwaysOnTop\": 1, \"clickControls\": 0, "
                   "\"edgeDoubleClick\": \"no\", \"shortSkip\": 0, \"longSkip\": 9999, \"autoplay\": 1 }");
         const AppSettings settings = AppSettings::load(dir.filePath("s.json"));
         QCOMPARE(settings.volume, 1.0);
         QCOMPARE(settings.muted, false);
         QCOMPARE(settings.theme, QString("graphite"));
         QCOMPARE(settings.style, QString("graphite"));
+        QCOMPARE(settings.font, QString());
         QCOMPARE(settings.compact, false);
         QCOMPARE(settings.alwaysOnTop, false);
         QCOMPARE(settings.clickControls, true);

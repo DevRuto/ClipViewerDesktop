@@ -21,6 +21,7 @@ const QString LastExportFolder = QStringLiteral("lastExportFolder");
 const QString LastFrameFolder = QStringLiteral("lastFrameFolder");
 const QString Theme = QStringLiteral("theme");
 const QString Style = QStringLiteral("style");
+const QString Font = QStringLiteral("font");
 const QString Compact = QStringLiteral("compact");
 const QString AlwaysOnTop = QStringLiteral("alwaysOnTop");
 const QString ClickControls = QStringLiteral("clickControls");
@@ -58,6 +59,7 @@ AppSettings AppSettings::load(const QString &path)
     settings.lastFrameFolder = json.take(LastFrameFolder).toString();
     settings.theme = json.take(Theme).toString(settings.theme);
     settings.style = json.take(Style).toString(settings.style);
+    settings.font = json.take(Font).toString(settings.font);
     settings.compact = json.take(Compact).toBool(settings.compact);
     settings.alwaysOnTop = json.take(AlwaysOnTop).toBool(settings.alwaysOnTop);
     settings.clickControls = json.take(ClickControls).toBool(settings.clickControls);
@@ -81,6 +83,7 @@ bool AppSettings::save(const QString &path) const
     json[LastFrameFolder] = lastFrameFolder;
     json[Theme] = theme;
     json[Style] = style;
+    json[Font] = font;
     json[Compact] = compact;
     json[AlwaysOnTop] = alwaysOnTop;
     json[ClickControls] = clickControls;
@@ -103,7 +106,7 @@ bool AppSettings::operator==(const AppSettings &other) const
     return volume == other.volume && muted == other.muted && smartCut == other.smartCut
         && reencode == other.reencode && lastExportFolder == other.lastExportFolder
         && lastFrameFolder == other.lastFrameFolder && theme == other.theme
-        && style == other.style && compact == other.compact
+        && style == other.style && font == other.font && compact == other.compact
         && alwaysOnTop == other.alwaysOnTop && clickControls == other.clickControls
         && edgeDoubleClick == other.edgeDoubleClick && shortSkip == other.shortSkip
         && longSkip == other.longSkip && autoplay == other.autoplay && subtitles == other.subtitles

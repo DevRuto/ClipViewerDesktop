@@ -64,6 +64,11 @@ ApplicationWindow {
     Binding { target: Theme; property: "name"; value: window.editor.theme }
     Binding { target: Theme; property: "style"; value: window.editor.style }
     Binding { target: Theme; property: "compact"; value: window.editor.compact }
+    // Only a family the settings offer, so a hand-edited symbol font can't make the UI unreadable
+    Binding {
+        target: Theme; property: "fontChoice"
+        value: window.editor.fontFamilies.includes(window.editor.font) ? window.editor.font : ""
+    }
 
     // A section title in a menu
     component MenuHeading: Text {

@@ -28,6 +28,9 @@ struct AppSettings
     // Shape of the controls (Theme.qml): graphite, material, fluent or adwaita. The UI falls back to
     // Graphite for a name it doesn't know.
     QString style = QStringLiteral("graphite");
+    // The UI font family. Empty: the style's own font. The UI also falls back to the style's font
+    // when the family isn't installed.
+    QString font;
     // Smaller controls and bars.
     bool compact = false;
     // Keeps the window above other windows.

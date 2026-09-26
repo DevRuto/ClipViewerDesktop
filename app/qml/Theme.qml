@@ -11,6 +11,8 @@ QtObject {
     property string style: "graphite"
     // Smaller controls and bars, with any style
     property bool compact: false
+    // The UI font family (the `font` setting); empty, or not installed, uses the style's font
+    property string fontChoice: ""
 
     // Menu order within each group; the same position in the other list is the counterpart, and a
     // pair shares its label. Paper, Mist and Sage keep their original keys so saved settings still load.
@@ -276,7 +278,8 @@ QtObject {
     function firstInstalled(families, fallback) {
         return families.find(family => installedFonts.includes(family)) ?? fallback
     }
-    readonly property string font: firstInstalled(currentStyle.fonts, "Geist")
+    readonly property string styleFont: firstInstalled(currentStyle.fonts, "Geist")
+    readonly property string font: fontChoice && installedFonts.includes(fontChoice) ? fontChoice : styleFont
     readonly property string monoFont: firstInstalled(currentStyle.monoFonts, "Geist Mono")
 
     function cornerFor(height) {

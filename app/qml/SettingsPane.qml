@@ -72,6 +72,25 @@ Popup {
             }
         }
 
+        // The UI font: the style's own, or any installed family, each shown in itself
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 6
+            Text {
+                text: "Font"
+                color: Theme.text2
+                font.pixelSize: 12
+                font.weight: Font.Medium
+            }
+            AppComboBox {
+                Layout.fillWidth: true
+                model: [{ label: "Style default (" + Theme.styleFont + ")", value: "" }]
+                    .concat(root.editor.fontFamilies.map(family => ({ label: family, value: family, font: family })))
+                value: root.editor.fontFamilies.includes(root.editor.font) ? root.editor.font : ""
+                onChosen: value => root.editor.font = value
+            }
+        }
+
         Repeater {
             model: root.settings
 
