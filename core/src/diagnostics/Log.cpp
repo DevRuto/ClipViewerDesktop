@@ -95,7 +95,7 @@ QString defaultDir()
 {
     // GenericDataLocation is %LOCALAPPDATA% on Windows.
     return QDir(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation))
-        .filePath(QStringLiteral("ClipViewerDesktop/logs"));
+        .filePath(QStringLiteral("ClipViewer/logs"));
 }
 
 void rotate(const QString &dir, int keep)

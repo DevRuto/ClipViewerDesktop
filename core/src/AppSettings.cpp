@@ -37,7 +37,7 @@ QString AppSettings::defaultPath()
 {
     // GenericDataLocation is %LOCALAPPDATA% on Windows.
     return QDir(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation))
-        .filePath(QStringLiteral("ClipViewerDesktop/settings.json"));
+        .filePath(QStringLiteral("ClipViewer/settings.json"));
 }
 
 AppSettings AppSettings::load(const QString &path)

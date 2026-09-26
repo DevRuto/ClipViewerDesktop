@@ -1,4 +1,4 @@
-qt_add_executable(ClipViewerDesktop WIN32 MACOSX_BUNDLE
+qt_add_executable(ClipViewer WIN32 MACOSX_BUNDLE
     src/EditorController.cpp
     src/EditorController.h
     src/Background.h
@@ -9,7 +9,7 @@ qt_add_executable(ClipViewerDesktop WIN32 MACOSX_BUNDLE
 )
 
 if(WIN32)
-    target_sources(ClipViewerDesktop PRIVATE app.rc)
+    target_sources(ClipViewer PRIVATE app.rc)
     # The resource compiler doesn't report the icon as a dependency, so a new icon wouldn't rebuild
     set_source_files_properties(app.rc PROPERTIES
         OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.ico)
@@ -28,16 +28,18 @@ add_custom_target(ClipViewerVersion
         -P "${PROJECT_SOURCE_DIR}/cmake/GitVersion.cmake"
     BYPRODUCTS "${version_header}"
     VERBATIM)
-add_dependencies(ClipViewerDesktop ClipViewerVersion)
-target_include_directories(ClipViewerDesktop PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
+add_dependencies(ClipViewer ClipViewerVersion)
+target_include_directories(ClipViewer PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 # The generated QML type registrations include the QML_ELEMENT headers by file name.
-target_include_directories(ClipViewerDesktop PRIVATE src)
+target_include_directories(ClipViewer PRIVATE src)
 
 set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
-qt_add_qml_module(ClipViewerDesktop
+# The module's folder would otherwise be app/ClipViewer, the same path as the executable on Linux.
+qt_add_qml_module(ClipViewer
     URI ClipViewer
+    OUTPUT_DIRECTORY qml/ClipViewer
     QML_FILES
         qml/AppButton.qml
         qml/AppComboBox.qml
@@ -63,7 +65,7 @@ qt_add_qml_module(ClipViewerDesktop
         assets/fonts/GeistMono-SemiBold.ttf
 )
 
-target_link_libraries(ClipViewerDesktop PRIVATE
+target_link_libraries(ClipViewer PRIVATE
     cvcore
     Qt6::Quick
     Qt6::QuickControls2
@@ -73,7 +75,7 @@ target_link_libraries(ClipViewerDesktop PRIVATE
 # `cmake --install build/<preset> --prefix dist` gives a runnable folder (an app bundle on macOS)
 # with Qt's libraries, QML modules and plugins (windeployqt / macdeployqt under the hood).
 include(GNUInstallDirs)
-install(TARGETS ClipViewerDesktop BUNDLE DESTINATION . RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS ClipViewer BUNDLE DESTINATION . RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Leave out what the app never loads: it's English only, renders with D3D11 on Windows (so no
 # software OpenGL), plays through the FFmpeg media backend and only reads PNG/BMP images.
@@ -85,7 +87,7 @@ if(WIN32)
         --exclude-plugins windowsmediaplugin,qicns,qtga,qtiff,qwbmp,qwebp)
 endif()
 qt_generate_deploy_qml_app_script(
-    TARGET ClipViewerDesktop
+    TARGET ClipViewer
     OUTPUT_SCRIPT deploy_script
     NO_UNSUPPORTED_PLATFORM_ERROR
     NO_TRANSLATIONS
@@ -113,7 +115,7 @@ endif()
 if(CLIPVIEWER_BUNDLE_FFMPEG)
     include(BundleFfmpeg)
     if(APPLE)
-        clipviewer_bundle_ffmpeg(ClipViewerDesktop.app/Contents/MacOS/ffmpeg)
+        clipviewer_bundle_ffmpeg(ClipViewer.app/Contents/MacOS/ffmpeg)
     else()
         clipviewer_bundle_ffmpeg(${CMAKE_INSTALL_BINDIR}/ffmpeg)
     endif()

@@ -70,7 +70,7 @@ jobs:
       - name: Portable zip
         shell: pwsh
         run: |
-          $name = "ClipViewerDesktop-$env:VERSION-windows-x64-portable"
+          $name = "ClipViewer-$env:VERSION-windows-x64-portable"
           New-Item -ItemType Directory out | Out-Null
           Copy-Item dist -Destination "stage\$name" -Recurse
           Compress-Archive -Path "stage\$name" -DestinationPath "out\$name.zip"
@@ -90,7 +90,7 @@ jobs:
               $iscc = Find-Iscc
           }
           & $iscc "/DAppVersion=$env:VERSION" "/DNumericVersion=${{ needs.version.outputs.numeric }}" `
-              "/DSourceDir=$PWD\dist" "/DOutputDir=$PWD\out" packaging\windows\ClipViewerDesktop.iss
+              "/DSourceDir=$PWD\dist" "/DOutputDir=$PWD\out" packaging\windows\ClipViewer.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - uses: actions/upload-artifact@v7
@@ -147,7 +147,7 @@ jobs:
 
       - name: Tarball
         run: |
-          name="ClipViewerDesktop-$VERSION-linux-x64"
+          name="ClipViewer-$VERSION-linux-x64"
           mkdir -p out stage
           cp -a dist "stage/$name"
           tar -C stage -czf "out/$name.tar.gz" "$name"
@@ -158,17 +158,17 @@ jobs:
         run: |
           mkdir -p AppDir
           cp -a dist AppDir/usr
-          cp packaging/linux/ClipViewerDesktop.desktop AppDir/clipviewerdesktop.desktop
-          cp app/assets/app-icon.png AppDir/clipviewerdesktop.png
+          cp packaging/linux/ClipViewer.desktop AppDir/clipviewer.desktop
+          cp app/assets/app-icon.png AppDir/clipviewer.png
           cat > AppDir/AppRun <<'EOF'
           #!/bin/sh
           HERE="$(dirname "$(readlink -f "$0")")"
-          exec "$HERE/usr/bin/ClipViewerDesktop" "$@"
+          exec "$HERE/usr/bin/ClipViewer" "$@"
           EOF
           chmod +x AppDir/AppRun
           curl -fsSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool
-          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir "out/ClipViewerDesktop-$VERSION-linux-x64.AppImage"
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir "out/ClipViewer-$VERSION-linux-x64.AppImage"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -231,7 +231,7 @@ jobs:
       # first; --deep doesn't reach into Contents/MacOS subfolders.
       - name: Ad-hoc sign
         run: |
-          app=dist/ClipViewerDesktop.app
+          app=dist/ClipViewer.app
           for tool in "$app"/Contents/MacOS/ffmpeg/*; do
             [ -x "$tool" ] && codesign --force --sign - "$tool"
           done
@@ -240,12 +240,12 @@ jobs:
 
       - name: Disk image and zip
         run: |
-          name="ClipViewerDesktop-$VERSION-macos-${{ matrix.arch }}"
+          name="ClipViewer-$VERSION-macos-${{ matrix.arch }}"
           mkdir -p out stage
-          cp -R dist/ClipViewerDesktop.app stage/
+          cp -R dist/ClipViewer.app stage/
           ln -s /Applications stage/Applications
           hdiutil create -volname "ClipViewer" -srcfolder stage -fs HFS+ -format UDZO -ov "out/$name.dmg"
-          ditto -c -k --keepParent dist/ClipViewerDesktop.app "out/$name.zip"
+          ditto -c -k --keepParent dist/ClipViewer.app "out/$name.zip"
 
       - uses: actions/upload-artifact@v7
         with:

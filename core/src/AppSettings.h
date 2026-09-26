@@ -48,7 +48,7 @@ struct AppSettings
     // Subtitle size, background and position.
     SubtitleStyle subtitles;
 
-    // %LOCALAPPDATA%\ClipViewerDesktop\settings.json on Windows.
+    // %LOCALAPPDATA%\ClipViewer\settings.json on Windows.
     static QString defaultPath();
 
     // Reads the settings, or returns the defaults if the file is missing or unreadable.

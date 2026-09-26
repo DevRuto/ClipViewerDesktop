@@ -23,7 +23,7 @@ QString executableName(const char *name)
 QString FfmpegPaths::managedDirectory()
 {
     return QDir(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation))
-        .filePath(QStringLiteral("ClipViewerDesktop/ffmpeg"));
+        .filePath(QStringLiteral("ClipViewer/ffmpeg"));
 }
 
 std::optional<FfmpegPaths> FfmpegPaths::locate(const QString &configuredDirectory)

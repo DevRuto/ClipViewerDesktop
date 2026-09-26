@@ -74,7 +74,7 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
   - `TimeFormat`: timestamps.
   - `StartupArgs`: the command line, an optional video path.
   - `PlayerClickGesture`: click to play/pause, double-click an edge to seek.
-  - `AppSettings`: `settings.json` in `%LOCALAPPDATA%\ClipViewerDesktop`. Unknown keys survive
+  - `AppSettings`: `settings.json` in `%LOCALAPPDATA%\ClipViewer`. Unknown keys survive
     saving.
   - `diagnostics/`: `Log` (every Qt message also goes to `logs\app.log`, the last 4 runs kept) and
     `CrashHandler` (a crash, abort, qFatal or uncaught exception appends a stack trace to the log,
@@ -85,7 +85,7 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
     and `SubtitleExtractor`.
   - `subtitles/`: `SubtitleTrack` (cues, lookup by time), `SrtParser`, `DvdSubtitle` (the DVD
     subpicture decoder) and `SubtitleStyle`.
-- `app/`: the executable (`ClipViewerDesktop.exe`), a QML module with URI `ClipViewer`.
+- `app/`: the executable (`ClipViewer.exe`), a QML module with URI `ClipViewer`.
   - `src/EditorController`: all player/editor state and commands exposed to QML (`QML_ELEMENT`,
     passed in as the `editor` required property). `src/StillFrameProvider`: serves the paused
     still frame as `image://still/<n>` (also the hover thumbnails and DVD subtitle pictures).
@@ -219,8 +219,8 @@ are MPEG-TS files in a hidden `.<name>.parts-<guid>` folder next to the output, 
 ## Roadmap (not done yet)
 
 - Release builds bundle FFmpeg. A dev build without FFmpeg shows a warning in the status bar.
-  An in-app download (the .NET app fetched gyan.dev's build into
-  `%LOCALAPPDATA%\ClipViewerDesktop\ffmpeg`, which `FfmpegPaths` still checks) is only needed if
+  An in-app download (the .NET app fetched gyan.dev's build into its app data folder;
+  `FfmpegPaths` still checks `%LOCALAPPDATA%\ClipViewer\ffmpeg`) is only needed if
   the bundled copy ever goes.
 - One running copy per user: later launches hand their video path to it
   (`StartupArgs::makePathsAbsolute` is ready for that).

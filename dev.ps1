@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Build, test, run or package ClipViewerDesktop with the Qt/MinGW toolchain in C:\Qt.
+    Build, test, run or package ClipViewer with the Qt/MinGW toolchain in C:\Qt.
 
 .EXAMPLE
     .\dev.ps1 build            # configure (first time) and build Debug
@@ -52,7 +52,7 @@ switch ($Command) {
     'run' {
         Build
         $appArgs = @($AppArgs | Where-Object { $_ -ne '--' })
-        & (Join-Path $buildDir 'ClipViewerDesktop.exe') @appArgs
+        & (Join-Path $buildDir 'ClipViewer.exe') @appArgs
     }
     'dist' {
         Build

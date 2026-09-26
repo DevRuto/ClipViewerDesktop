@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     // Before anything else, so a crash while Qt starts up is reported too.
     const QString logDir = cv::Log::defaultDir();
     const bool logging = cv::Log::start(
-        logDir, QStringLiteral("ClipViewerDesktop %1\nQt %2, %3 (%4), %5")
+        logDir, QStringLiteral("ClipViewer %1\nQt %2, %3 (%4), %5")
                     .arg(QStringLiteral(CLIPVIEWER_VERSION), QString::fromLatin1(qVersion()),
                          QSysInfo::prettyProductName(), QSysInfo::kernelVersion(),
                          QSysInfo::currentCpuArchitecture()));
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     QLoggingCategory::setFilterRules(QStringLiteral("qt.scenegraph.general=true\nqt.rhi.general=true"));
 
     QGuiApplication app(argc, argv);
-    QGuiApplication::setApplicationName(QStringLiteral("ClipViewerDesktop"));
+    QGuiApplication::setApplicationName(QStringLiteral("ClipViewer"));
     QGuiApplication::setApplicationVersion(QStringLiteral(CLIPVIEWER_VERSION));
     QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/qt/qml/ClipViewer/assets/app-icon.png")));
 

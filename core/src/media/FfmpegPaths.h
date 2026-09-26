@@ -14,7 +14,7 @@ struct FfmpegPaths
     QString ffmpeg;
     QString ffprobe;
 
-    // Where the app installs its own FFmpeg: %LOCALAPPDATA%\ClipViewerDesktop\ffmpeg on Windows.
+    // Where the app installs its own FFmpeg: %LOCALAPPDATA%\ClipViewer\ffmpeg on Windows.
     // Per-user and writable, unlike the app folder.
     static QString managedDirectory();
 

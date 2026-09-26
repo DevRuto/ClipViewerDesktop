@@ -8,7 +8,7 @@
 // next to the log as well.
 //
 // Only exported functions (Qt's, Windows') are named. For the app's own frames, run
-// `addr2line -f -C -e ClipViewerDesktop.exe 0x<0x140000000 + offset>` on a build of the same
+// `addr2line -f -C -e ClipViewer.exe 0x<0x140000000 + offset>` on a build of the same
 // commit with debug info (-g doesn't change GCC's code, so a Release crash resolves against a
 // Release build with -g added).
 namespace cv::CrashHandler {

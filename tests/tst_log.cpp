@@ -80,7 +80,7 @@ private slots:
     {
         QTemporaryDir dir;
         const QString logs = QDir(dir.path()).filePath("logs"); // created by start
-        QVERIFY(Log::start(logs, QStringLiteral("ClipViewerDesktop test")));
+        QVERIFY(Log::start(logs, QStringLiteral("ClipViewer test")));
         QCOMPARE(Log::currentPath(), QDir(logs).filePath("app.log"));
         qWarning("first run %d", 1);
         Log::stop(QStringLiteral("bye"));
@@ -88,7 +88,7 @@ private slots:
         qWarning("not logged"); // after stop
 
         const QByteArray first = readFile(QDir(logs).filePath("app.log"));
-        QVERIFY(first.startsWith("ClipViewerDesktop test\n\n"));
+        QVERIFY(first.startsWith("ClipViewer test\n\n"));
         QVERIFY(first.contains(" W ["));
         QVERIFY(first.contains("first run 1\n"));
         QVERIFY(first.contains("bye\n"));

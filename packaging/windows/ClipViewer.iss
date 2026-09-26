@@ -1,6 +1,6 @@
 ; Windows installer for the deployed folder (`cmake --install build/release --prefix dist`).
 ; Built by .github/workflows/release.yml:
-;   iscc /DAppVersion=1.2.3 /DNumericVersion=1.2.3 /DSourceDir=dist /DOutputDir=out ClipViewerDesktop.iss
+;   iscc /DAppVersion=1.2.3 /DNumericVersion=1.2.3 /DSourceDir=dist /DOutputDir=out ClipViewer.iss
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
@@ -16,7 +16,7 @@
 #endif
 
 #define AppName "ClipViewer"
-#define AppExe "ClipViewerDesktop.exe"
+#define AppExe "ClipViewer.exe"
 
 [Setup]
 ; Keep this id: upgrades and uninstall find the existing install through it.
@@ -27,7 +27,7 @@ AppVerName={#AppName} {#AppVersion}
 AppPublisher=DevRuto
 AppPublisherURL=https://github.com/DevRuto/ClipViewerDesktop
 VersionInfoVersion={#NumericVersion}
-DefaultDirName={autopf}\ClipViewerDesktop
+DefaultDirName={autopf}\ClipViewer
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 ; Installs for the current user without admin rights; the dialog offers an all-users install.
@@ -38,7 +38,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile=..\..\app\assets\app-icon.ico
 UninstallDisplayIcon={app}\bin\{#AppExe}
 OutputDir={#OutputDir}
-OutputBaseFilename=ClipViewerDesktop-{#AppVersion}-windows-x64-setup
+OutputBaseFilename=ClipViewer-{#AppVersion}-windows-x64-setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -49,6 +49,12 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+; Left behind by versions before the rename to ClipViewer.exe.
+[InstallDelete]
+Type: files; Name: "{app}\bin\ClipViewerDesktop.exe"
+Type: files; Name: "{autoprograms}\ClipViewer Desktop.lnk"
+Type: files; Name: "{autodesktop}\ClipViewer Desktop.lnk"
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\bin\{#AppExe}"
@@ -68,6 +74,13 @@ Root: HKA; Subkey: "Software\Classes\.mov\OpenWithList\{#AppExe}"; Flags: uninsd
 Root: HKA; Subkey: "Software\Classes\.mkv\OpenWithList\{#AppExe}"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\.webm\OpenWithList\{#AppExe}"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\.avi\OpenWithList\{#AppExe}"; Flags: uninsdeletekey
+; The entries of versions before the rename.
+Root: HKA; Subkey: "Software\Classes\Applications\ClipViewerDesktop.exe"; ValueType: none; Flags: deletekey
+Root: HKA; Subkey: "Software\Classes\.mp4\OpenWithList\ClipViewerDesktop.exe"; ValueType: none; Flags: deletekey
+Root: HKA; Subkey: "Software\Classes\.mov\OpenWithList\ClipViewerDesktop.exe"; ValueType: none; Flags: deletekey
+Root: HKA; Subkey: "Software\Classes\.mkv\OpenWithList\ClipViewerDesktop.exe"; ValueType: none; Flags: deletekey
+Root: HKA; Subkey: "Software\Classes\.webm\OpenWithList\ClipViewerDesktop.exe"; ValueType: none; Flags: deletekey
+Root: HKA; Subkey: "Software\Classes\.avi\OpenWithList\ClipViewerDesktop.exe"; ValueType: none; Flags: deletekey
 
 [Run]
 Filename: "{app}\bin\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent

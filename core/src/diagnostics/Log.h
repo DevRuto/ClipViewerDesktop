@@ -12,7 +12,7 @@ class QDateTime;
 // the usual output, so users can attach it to a bug report. The last few runs are kept.
 namespace cv::Log {
 
-// %LOCALAPPDATA%\ClipViewerDesktop\logs on Windows.
+// %LOCALAPPDATA%\ClipViewer\logs on Windows.
 QString defaultDir();
 
 // Old logs kept next to app.log: app.1.log (the previous run) … app.<KeptRuns>.log.

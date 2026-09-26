@@ -67,9 +67,9 @@ notice. The folder is here:
 
 | OS | Log folder |
 | --- | --- |
-| Windows | `%LOCALAPPDATA%\ClipViewerDesktop\logs` |
-| Linux | `~/.local/share/ClipViewerDesktop/logs` |
-| macOS | `~/Library/Application Support/ClipViewerDesktop/logs` |
+| Windows | `%LOCALAPPDATA%\ClipViewer\logs` |
+| Linux | `~/.local/share/ClipViewer/logs` |
+| macOS | `~/Library/Application Support/ClipViewer/logs` |
 
 - `app.log` is the current (or last) run, `app.1.log` the one before it, and so on up to
   `app.4.log`. After a crash, restarting the app moves that run's log to `app.1.log`, so attach
@@ -90,18 +90,18 @@ The app crashed.
 Exception 0xc0000005 (access violation) at 0x7ff747599e1e
   writing address 0x0
 Thread 0x20d8, stack:
-  #0  ClipViewerDesktop.exe+0x49e1e
+  #0  ClipViewer.exe+0x49e1e
   ...
   #10 Qt6Core.dll+0x97bb8  QCoreApplication::notifyInternal2(QObject*, QEvent*)+0x1a8
 ```
 
-Functions exported by Qt and Windows DLLs are named. Frames in `ClipViewerDesktop.exe` show only
+Functions exported by Qt and Windows DLLs are named. Frames in `ClipViewer.exe` show only
 an offset, because Windows' symbol library can't read MinGW's debug info. To turn an offset into
 a function and a line, add it to the exe's image base (`0x140000000`) and run `addr2line` from
 MinGW on the build that crashed:
 
 ```powershell
-addr2line -f -C -p -e build\debug\ClipViewerDesktop.exe 0x140049e1e
+addr2line -f -C -p -e build\debug\ClipViewer.exe 0x140049e1e
 ```
 
 Release builds have no debug info. GCC generates the same code with or without `-g`, so rebuild
@@ -168,11 +168,11 @@ the exe. Add Qt's `bin` folder to PATH before you start the app:
 
 ```powershell
 $env:PATH = "C:\Qt\6.12.0\mingw_64\bin;$env:PATH"
-.\build\debug\ClipViewerDesktop.exe path\to\video.mp4
+.\build\debug\ClipViewer.exe path\to\video.mp4
 ```
 
-On Linux, run `build/unix-debug/ClipViewerDesktop`. On macOS, run
-`build/unix-debug/ClipViewerDesktop.app/Contents/MacOS/ClipViewerDesktop`.
+On Linux, run `build/unix-debug/ClipViewer`. On macOS, run
+`build/unix-debug/ClipViewer.app/Contents/MacOS/ClipViewer`.
 
 Qt sends its log to the debugger on Windows. Set `QT_FORCE_STDERR_LOGGING=1` to print QML
 warnings and errors to the console. Everything also goes to `app.log` (see
@@ -192,10 +192,10 @@ cmake --install build/release --prefix dist
 This gives a self-contained app in `dist` that you can zip and ship as is. It includes Qt's
 libraries, QML modules and plugins, and FFmpeg:
 
-- Windows: `dist/bin/ClipViewerDesktop.exe`, with FFmpeg in `dist/bin/ffmpeg/`
-- Linux: `dist/bin/ClipViewerDesktop`, with Qt in `dist/lib/` and FFmpeg in
+- Windows: `dist/bin/ClipViewer.exe`, with FFmpeg in `dist/bin/ffmpeg/`
+- Linux: `dist/bin/ClipViewer`, with Qt in `dist/lib/` and FFmpeg in
   `dist/bin/ffmpeg/`
-- macOS: `dist/ClipViewerDesktop.app`, with FFmpeg in `Contents/MacOS/ffmpeg/`
+- macOS: `dist/ClipViewer.app`, with FFmpeg in `Contents/MacOS/ffmpeg/`
 
 ### Releases
 
@@ -203,7 +203,7 @@ Pushing a tag like `v1.2.3` runs `.github/workflows/release.yml`. It builds ever
 publishes a GitHub release with these files (a tag with a suffix, like `v1.2.3-beta.1`, makes a
 pre-release):
 
-- Windows x64: an installer (Inno Setup, `packaging/windows/ClipViewerDesktop.iss`) and a
+- Windows x64: an installer (Inno Setup, `packaging/windows/ClipViewer.iss`) and a
   portable zip
 - Linux x64: an AppImage and a `.tar.gz`
 - macOS arm64 and x64: a `.dmg` and a zipped `.app`, ad-hoc signed only
@@ -227,7 +227,7 @@ OS will warn you:
   **Run anyway**.
 - **macOS:** the app is only ad-hoc signed and not notarized, so Gatekeeper blocks it. Right-click
   the app, choose **Open**, then **Open** again. If it says the app is damaged, run
-  `xattr -dr com.apple.quarantine /Applications/ClipViewerDesktop.app`.
+  `xattr -dr com.apple.quarantine /Applications/ClipViewer.app`.
 - **Linux:** there's no OS signing to worry about.
 
 To make sure you have an unmodified download, compare its hash against `SHA256SUMS.txt` in the
@@ -258,7 +258,7 @@ Windows build includes its `LICENSE`. If you distribute the app, you must meet t
 for FFmpeg, including the offer of its source code.
 
 The app looks for FFmpeg in this order: the bundled `ffmpeg/` folder (or `ffmpeg/bin/`) next to
-the executable, then `%LOCALAPPDATA%\ClipViewerDesktop\ffmpeg` (or the platform's app data
+the executable, then `%LOCALAPPDATA%\ClipViewer\ffmpeg` (or the platform's app data
 folder), then PATH. Without FFmpeg, the app still starts and plays videos, but it can't export
 and shows a warning in the status bar.
 
