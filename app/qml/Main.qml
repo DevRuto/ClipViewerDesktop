@@ -54,7 +54,7 @@ ApplicationWindow {
     visible: true
     flags: editor.alwaysOnTop ? Qt.Window | Qt.WindowStaysOnTopHint : Qt.Window
     color: Theme.background
-    title: (editor.hasMedia ? editor.fileName + " â€” " : "") + "ClipViewer " + Qt.application.version
+    title: (editor.hasMedia ? editor.fileName + " — " : "") + "ClipViewer " + Qt.application.version
     font.family: Theme.font
     font.pixelSize: 13
 
@@ -204,7 +204,7 @@ ApplicationWindow {
     }
 
     function formatRate(rate) {
-        return rate + "Ã—"
+        return rate + "×"
     }
 
     function cycle(list, value) {
@@ -792,13 +792,13 @@ ApplicationWindow {
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: window.editor.loading ? "Openingâ€¦" : "Drop a video here, or open one"
+                    text: window.editor.loading ? "Opening…" : "Drop a video here, or open one"
                     color: Theme.text2
                     font.pixelSize: 15
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "mp4 Â· webm Â· mov Â· avi Â· mkv"
+                    text: "mp4 · webm · mov · avi · mkv"
                     color: Theme.text3
                     font.family: Theme.monoFont
                     font.pixelSize: 12
@@ -806,7 +806,7 @@ ApplicationWindow {
                 AppButton {
                     anchors.horizontalCenter: parent.horizontalCenter
                     flat: true
-                    text: "Open videoâ€¦"
+                    text: "Open video…"
                     enabled: window.editor.ffmpegFound && !window.editor.loading
                     onClicked: window.showOpenDialog()
                 }
@@ -1302,7 +1302,7 @@ ApplicationWindow {
                         Layout.alignment: Qt.AlignBottom
                         flat: true
                         iconName: "export"
-                        text: "Exportâ€¦"
+                        text: "Export…"
                         toolTip: "Export the kept range (Ctrl+E)"
                         enabled: window.editor.hasMedia && !window.editor.exporting
                         onClicked: window.exportClip()
@@ -1330,7 +1330,7 @@ ApplicationWindow {
                 Text {
                     Layout.fillWidth: true
                     text: window.editor.exporting
-                        ? "Exportingâ€¦ " + Math.round(window.editor.exportProgress * 100) + "%"
+                        ? "Exporting… " + Math.round(window.editor.exportProgress * 100) + "%"
                         : window.editor.status
                     color: window.editor.ffmpegFound ? Theme.text2 : Theme.warning
                     elide: Text.ElideRight
