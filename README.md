@@ -1,4 +1,4 @@
-# ClipViewer Desktop
+# <img src="app/assets/app-icon.svg" width="40" height="40" alt="" align="top"> ClipViewer Desktop
 
 [![Windows](https://github.com/DevRuto/ClipViewerDesktop/actions/workflows/windows.yml/badge.svg?branch=main)](https://github.com/DevRuto/ClipViewerDesktop/actions/workflows/windows.yml)
 [![Linux](https://github.com/DevRuto/ClipViewerDesktop/actions/workflows/linux.yml/badge.svg?branch=main)](https://github.com/DevRuto/ClipViewerDesktop/actions/workflows/linux.yml)

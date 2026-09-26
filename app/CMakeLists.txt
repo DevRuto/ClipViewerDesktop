@@ -10,6 +10,9 @@ qt_add_executable(ClipViewerDesktop WIN32 MACOSX_BUNDLE
 
 if(WIN32)
     target_sources(ClipViewerDesktop PRIVATE app.rc)
+    # The resource compiler doesn't report the icon as a dependency, so a new icon wouldn't rebuild
+    set_source_files_properties(app.rc PROPERTIES
+        OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.ico)
 endif()
 
 # Version.h is regenerated on every build, so the version follows new commits and tags without
