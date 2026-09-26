@@ -52,7 +52,9 @@ ApplicationWindow {
     minimumWidth: 760
     minimumHeight: 520
     visible: true
-    flags: editor.alwaysOnTop ? Qt.Window | Qt.WindowStaysOnTopHint : Qt.Window
+    // The decorations are spelled out: with only a stay-on-top hint Windows drops the title bar.
+    flags: Qt.Window | Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint
+        | Qt.WindowCloseButtonHint | (editor.alwaysOnTop ? Qt.WindowStaysOnTopHint : 0)
     color: Theme.background
     title: (editor.hasMedia ? editor.fileName + " — " : "") + "ClipViewer " + Qt.application.version
     font.family: Theme.font
@@ -209,6 +211,15 @@ ApplicationWindow {
 
     function cycle(list, value) {
         return list[(list.indexOf(value) + 1) % list.length] // -1 + 1: a value not in the list goes to the first
+    }
+
+    // One popup at a time: pressing another popup's button doesn't count as a press outside.
+    property Popup openPopup: null
+
+    function popupOpened(popup) {
+        if (openPopup && openPopup !== popup)
+            openPopup.close()
+        openPopup = popup
     }
 
     function resetView() {
@@ -429,6 +440,7 @@ ApplicationWindow {
 
                     Popup {
                         id: infoPanel
+                        onAboutToShow: window.popupOpened(infoPanel)
                         y: infoButton.height + 6
                         x: infoButton.width - width
                         width: 480
@@ -515,6 +527,7 @@ ApplicationWindow {
 
                     Popup {
                         id: themeMenu
+                        onAboutToShow: window.popupOpened(themeMenu)
                         y: themeButton.height + 6
                         x: themeButton.width - width
                         padding: 4
@@ -867,6 +880,7 @@ ApplicationWindow {
 
                         Popup {
                             id: tracksMenu
+                            onAboutToShow: window.popupOpened(tracksMenu)
                             y: -height - 6
                             x: Math.min(0, (tracksButton.width - width) / 2)
                             padding: 4
@@ -944,6 +958,7 @@ ApplicationWindow {
 
                         Popup {
                             id: viewMenu
+                            onAboutToShow: window.popupOpened(viewMenu)
                             y: -height - 6
                             x: Math.min(0, (viewButton.width - width) / 2)
                             width: 340
@@ -1053,6 +1068,7 @@ ApplicationWindow {
 
                         Popup {
                             id: speedMenu
+                            onAboutToShow: window.popupOpened(speedMenu)
                             y: -height - 6
                             x: (speedButton.width - width) / 2
                             padding: 4
@@ -1291,6 +1307,7 @@ ApplicationWindow {
 
                         ReencodeSettings {
                             id: reencodeMenu
+                            onAboutToShow: window.popupOpened(reencodeMenu)
                             editor: window.editor
                             x: reencodeButton.width - width
                             y: -reencodeMenu.height - 8
