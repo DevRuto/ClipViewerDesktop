@@ -19,6 +19,8 @@ struct AppSettings
     ReencodeOptions reencode;
     // Where the last export went; the save dialog starts there. Empty: next to the source video.
     QString lastExportFolder;
+    // Where the last saved frame (PNG) went. Empty: next to the source video.
+    QString lastFrameFolder;
     // Colour palette name (Theme.qml); the UI falls back to Graphite for a name it doesn't know.
     QString theme = QStringLiteral("graphite");
     // Keeps the window above other windows.

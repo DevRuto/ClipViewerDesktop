@@ -18,6 +18,7 @@ const QString Muted = QStringLiteral("muted");
 const QString SmartCut = QStringLiteral("smartCut");
 const QString Reencode = QStringLiteral("reencode");
 const QString LastExportFolder = QStringLiteral("lastExportFolder");
+const QString LastFrameFolder = QStringLiteral("lastFrameFolder");
 const QString Theme = QStringLiteral("theme");
 const QString AlwaysOnTop = QStringLiteral("alwaysOnTop");
 
@@ -46,6 +47,7 @@ AppSettings AppSettings::load(const QString &path)
     settings.smartCut = json.take(SmartCut).toBool(settings.smartCut);
     settings.reencode = ReencodeOptions::fromJson(json.take(Reencode).toObject());
     settings.lastExportFolder = json.take(LastExportFolder).toString();
+    settings.lastFrameFolder = json.take(LastFrameFolder).toString();
     settings.theme = json.take(Theme).toString(settings.theme);
     settings.alwaysOnTop = json.take(AlwaysOnTop).toBool(settings.alwaysOnTop);
     settings.m_unknown = json;
@@ -60,6 +62,7 @@ bool AppSettings::save(const QString &path) const
     json[SmartCut] = smartCut;
     json[Reencode] = reencode.toJson();
     json[LastExportFolder] = lastExportFolder;
+    json[LastFrameFolder] = lastFrameFolder;
     json[Theme] = theme;
     json[AlwaysOnTop] = alwaysOnTop;
 
@@ -74,7 +77,8 @@ bool AppSettings::save(const QString &path) const
 bool AppSettings::operator==(const AppSettings &other) const
 {
     return volume == other.volume && muted == other.muted && smartCut == other.smartCut
-        && reencode == other.reencode && lastExportFolder == other.lastExportFolder && theme == other.theme
+        && reencode == other.reencode && lastExportFolder == other.lastExportFolder
+        && lastFrameFolder == other.lastFrameFolder && theme == other.theme
         && alwaysOnTop == other.alwaysOnTop
         && m_unknown == other.m_unknown;
 }

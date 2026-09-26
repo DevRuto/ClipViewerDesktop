@@ -116,6 +116,7 @@ private slots:
         settings.smartCut = false;
         settings.reencode.maxHeight = 720;
         settings.lastExportFolder = "D:/exports";
+        settings.lastFrameFolder = "D:/frames";
         settings.theme = "paper";
         settings.alwaysOnTop = true;
         QVERIFY(settings.save(path));

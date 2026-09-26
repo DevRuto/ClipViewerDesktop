@@ -228,6 +228,16 @@ private slots:
         QCOMPARE(FrameGrabber(paths()).grab(samplePath(), 1, 160).width(), 160);
     }
 
+    void grabFrame_fullSize_keepsOddSize()
+    {
+        const QString odd = output("odd.mkv");
+        runTool(paths().ffmpeg,
+                {"-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i",
+                 "testsrc=size=321x241:rate=10:duration=1", "-c:v", "ffv1", odd},
+                {});
+        QCOMPARE(FrameGrabber(paths()).grab(odd, 0.5, 0).size(), QSize(321, 241));
+    }
+
     void grabFrame_pastEnd_returnsNull()
     {
         QVERIFY(FrameGrabber(paths()).grab(samplePath(), 60).isNull());

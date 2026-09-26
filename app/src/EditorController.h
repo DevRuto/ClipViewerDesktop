@@ -120,6 +120,10 @@ public:
     // "<last export folder, or the source's>/<name>_clip.mp4".
     Q_INVOKABLE QUrl suggestedExportUrl() const;
     Q_INVOKABLE void exportTo(const QUrl &destination);
+    // "<last frame folder, or the source's>/<name>_<time>.png".
+    Q_INVOKABLE QUrl suggestedFrameUrl(double seconds) const;
+    // Saves the full-size frame at `seconds` as a PNG and reports the result in the status bar.
+    Q_INVOKABLE void saveFrame(double seconds, const QUrl &destination);
     Q_INVOKABLE void cancelExport();
     Q_INVOKABLE void clearStatus() { setStatus({}); }
     // MediaPlayer.onErrorOccurred: shows the player's message in the status bar.
@@ -173,6 +177,7 @@ private:
     QUrl m_stillSource;
     quint64 m_stillGeneration = 0;
     cv::CancelToken m_stillCancel;
+    cv::CancelToken m_saveFrameCancel; // only cancelled on exit
     StillFrameProvider *m_thumbnails;
     QUrl m_thumbnailSource;
     quint64 m_thumbnailSerial = 0;

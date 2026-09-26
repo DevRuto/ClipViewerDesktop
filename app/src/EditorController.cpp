@@ -11,6 +11,7 @@
 #include <QJsonObject>
 #include <QLocale>
 #include <QPointer>
+#include <QSaveFile>
 #include <QThreadPool>
 
 #include <cmath>
@@ -72,6 +73,7 @@ EditorController::~EditorController()
     // Worker threads delete the partial export and stop decoding once they notice.
     m_exportCancel.cancel();
     m_stillCancel.cancel();
+    m_saveFrameCancel.cancel();
     m_thumbnailCancel.cancel();
     if (m_settingsSave.isActive())
         writeSettings();
@@ -393,6 +395,60 @@ void EditorController::clearStill()
         return;
     m_stillSource.clear();
     emit stillChanged();
+}
+
+// ---- Saving a frame ----
+
+QUrl EditorController::suggestedFrameUrl(double seconds) const
+{
+    if (!m_info)
+        return {};
+    const QFileInfo source(m_info->path);
+    const QDir folder = !m_settings.lastFrameFolder.isEmpty() && QFileInfo(m_settings.lastFrameFolder).isDir()
+                            ? QDir(m_settings.lastFrameFolder)
+                            : source.dir();
+    // "1:23.456" isn't a valid file name on Windows
+    const QString time = cv::TimeFormat::format(snap(std::max(0.0, seconds))).replace(QLatin1Char(':'), QLatin1Char('-'));
+    return QUrl::fromLocalFile(folder.filePath(source.completeBaseName() + QLatin1Char('_') + time + QStringLiteral(".png")));
+}
+
+void EditorController::saveFrame(double seconds, const QUrl &destination)
+{
+    if (!m_paths || !m_info)
+        return;
+    QString output = destination.isLocalFile() ? destination.toLocalFile() : destination.toString();
+    if (QFileInfo(output).suffix().compare(QLatin1String("png"), Qt::CaseInsensitive) != 0)
+        output += QStringLiteral(".png"); // so the source video can never be overwritten
+    // The last frame starts a frame before the end.
+    seconds = std::clamp(snap(seconds), 0.0, std::max(0.0, duration() - frameDuration()));
+    setStatus(QStringLiteral("Saving frame…"));
+
+    runInBackground(
+        this,
+        [paths = *m_paths, path = m_info->path, seconds, output, cancel = m_saveFrameCancel]() -> QString {
+            try {
+                const QImage frame = cv::FrameGrabber(paths).grab(path, seconds, 0, cancel);
+                if (frame.isNull())
+                    return QStringLiteral("ffmpeg couldn't decode a frame there");
+                QSaveFile file(output);
+                if (!file.open(QIODevice::WriteOnly) || !frame.save(&file, "PNG") || !file.commit())
+                    return file.errorString().isEmpty() ? QStringLiteral("couldn't write the file") : file.errorString();
+                return {};
+            } catch (const std::exception &e) {
+                return firstLine(e.what());
+            }
+        },
+        [this, output](QString error) {
+            const QString name = QFileInfo(output).fileName();
+            if (!error.isEmpty()) {
+                setStatus(QStringLiteral("Couldn't save %1: %2").arg(name, error));
+                return;
+            }
+            m_settings.lastFrameFolder = QFileInfo(output).absolutePath();
+            saveSettings();
+            setStatus(QStringLiteral("Saved %1  ·  %2")
+                          .arg(name, formatBytes(static_cast<double>(QFileInfo(output).size()))));
+        });
 }
 
 // ---- Hover thumbnails ----

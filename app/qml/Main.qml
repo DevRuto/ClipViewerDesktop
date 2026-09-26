@@ -225,6 +225,17 @@ ApplicationWindow {
         openDialog.open()
     }
 
+    // The frame is the one on screen when asked, not when the dialog closes.
+    property double frameToSave: 0
+
+    function saveFrame() {
+        if (!editor.hasMedia)
+            return
+        frameToSave = position
+        frameDialog.selectedFile = editor.suggestedFrameUrl(frameToSave)
+        frameDialog.open()
+    }
+
     function exportClip() {
         if (!editMode || !editor.hasMedia || editor.exporting)
             return
@@ -289,6 +300,15 @@ ApplicationWindow {
         onAccepted: window.editor.exportTo(selectedFile)
     }
 
+    FileDialog {
+        id: frameDialog
+        title: "Save frame"
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "png"
+        nameFilters: ["PNG image (*.png)"]
+        onAccepted: window.editor.saveFrame(window.frameToSave, selectedFile)
+    }
+
     // ---- Shortcuts (as in the ClipViewer web player) ----
 
     Shortcut { sequences: ["Space", "K"]; onActivated: window.togglePlay() }
@@ -309,6 +329,7 @@ ApplicationWindow {
         onActivated: window.seekTo(window.editMode ? window.editor.trimEnd : window.editor.duration - window.editor.frameDuration)
     }
     Shortcut { sequence: "Ctrl+O"; onActivated: window.showOpenDialog() }
+    Shortcut { sequence: "Ctrl+S"; onActivated: window.saveFrame() }
     Shortcut { sequence: "Ctrl+E"; enabled: window.editMode; onActivated: window.exportClip() }
     Shortcut { sequence: "M"; onActivated: window.editor.muted = !window.editor.muted }
     Shortcut { sequence: "Up"; onActivated: window.changeVolume(0.05) }
@@ -372,6 +393,13 @@ ApplicationWindow {
                     font.pixelSize: 12
                     elide: Text.ElideRight
                     Layout.fillWidth: true
+                }
+                AppButton {
+                    quiet: true
+                    iconName: "camera"
+                    toolTip: "Save this frame as a PNG (Ctrl+S)"
+                    enabled: window.editor.hasMedia
+                    onClicked: window.saveFrame()
                 }
                 AppButton {
                     quiet: true
