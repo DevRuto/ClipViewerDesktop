@@ -15,7 +15,7 @@
   #define OutputDir "..\..\publish"
 #endif
 
-#define AppName "ClipViewer Desktop"
+#define AppName "ClipViewer"
 #define AppExe "ClipViewerDesktop.exe"
 
 [Setup]

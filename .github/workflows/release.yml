@@ -244,7 +244,7 @@ jobs:
           mkdir -p out stage
           cp -R dist/ClipViewerDesktop.app stage/
           ln -s /Applications stage/Applications
-          hdiutil create -volname "ClipViewer Desktop" -srcfolder stage -fs HFS+ -format UDZO -ov "out/$name.dmg"
+          hdiutil create -volname "ClipViewer" -srcfolder stage -fs HFS+ -format UDZO -ov "out/$name.dmg"
           ditto -c -k --keepParent dist/ClipViewerDesktop.app "out/$name.zip"
 
       - uses: actions/upload-artifact@v7
@@ -312,5 +312,5 @@ jobs:
             gh release edit "$TAG" --notes-file notes.md --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$TAG" release/* --repo "$GITHUB_REPOSITORY" \
-              --title "ClipViewer Desktop ${{ needs.version.outputs.version }}" --notes-file notes.md $prerelease
+              --title "ClipViewer ${{ needs.version.outputs.version }}" --notes-file notes.md $prerelease
           fi

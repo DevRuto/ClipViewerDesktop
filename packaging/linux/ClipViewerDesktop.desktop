@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=ClipViewer Desktop
+Name=ClipViewer
 Comment=Play videos and export a trimmed range to MP4
 Exec=ClipViewerDesktop %f
 Icon=clipviewerdesktop
