@@ -105,7 +105,8 @@ locations):
   The release presets set `CLIPVIEWER_BUNDLE_FFMPEG`, and `cmake/BundleFfmpeg.cmake` downloads a
   pinned build at configure time and checks its SHA-256 (gyan.dev on Windows, Martin Riedl's builds
   on Linux/macOS). `CLIPVIEWER_FFMPEG_DIR` bundles a local copy instead. To bump the version,
-  update the version, URLs and hashes together. On Windows the deploy step leaves out Qt parts the
+  update the version, URLs and hashes together, including in the Windows and Linux CI workflows,
+  which test against the same builds. On Windows the deploy step leaves out Qt parts the
   app never loads (translations, `opengl32sw.dll`, the non-Basic Controls styles, the QML debug and
   other unused plugins; see `app/CMakeLists.txt`). If the app starts using one, remove it from
   that list.

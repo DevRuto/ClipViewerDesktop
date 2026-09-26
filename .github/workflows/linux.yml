@@ -35,11 +35,30 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install build dependencies and FFmpeg
+      - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg \
+          sudo apt-get install -y --no-install-recommends \
             libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libfontconfig1-dev libfreetype-dev
+
+      # tst_ffmpegintegration skips itself without ffmpeg. Uses the build pinned in
+      # cmake/BundleFfmpeg.cmake, the one release builds ship, not Ubuntu's older package.
+      - name: Install FFmpeg
+        run: |
+          dir="$RUNNER_TEMP/ffmpeg"
+          base=https://ffmpeg.martin-riedl.de/download/linux/amd64/1789931100_9.0.2
+          mkdir -p "$dir"
+          curl -fsSL "$base/ffmpeg.zip" -o "$RUNNER_TEMP/ffmpeg.zip"
+          curl -fsSL "$base/ffprobe.zip" -o "$RUNNER_TEMP/ffprobe.zip"
+          sha256sum -c <<EOF
+          fa8ecf4abbd290d98f7d188b8649cc6b391ae209a98452be955a15aab1909d7f  $RUNNER_TEMP/ffmpeg.zip
+          3f428c49070be3d24ec338602b76d412e401ffcb8a5641ef0e729181a232fc32  $RUNNER_TEMP/ffprobe.zip
+          EOF
+          unzip -q "$RUNNER_TEMP/ffmpeg.zip" -d "$dir"
+          unzip -q "$RUNNER_TEMP/ffprobe.zip" -d "$dir"
+          chmod +x "$dir/ffmpeg" "$dir/ffprobe"
+          "$dir/ffmpeg" -hide_banner -version | head -1
+          echo "CLIPVIEWER_FFMPEG_DIR=$dir" >> "$GITHUB_ENV"
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
