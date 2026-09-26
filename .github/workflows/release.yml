@@ -265,6 +265,11 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       TAG: ${{ github.ref_name }}
     steps:
+      # Full history and tags, for the release notes.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
       - uses: actions/download-artifact@v8
         with:
           path: release
@@ -274,14 +279,37 @@ jobs:
         working-directory: release
         run: sha256sum * > SHA256SUMS.txt
 
-      # Re-running the workflow replaces the files of an existing release.
+      # The notes list the commit subjects since the previous tag. A stable release is compared
+      # with the previous stable one, so it also covers what went out in its pre-releases.
+      - name: Release notes
+        run: |
+          exclude=()
+          [[ "$TAG" != *-* ]] && exclude=(--exclude '*-*')
+          if previous=$(git describe --tags --abbrev=0 "${exclude[@]}" "$TAG^" 2> /dev/null); then
+            range="$previous..$TAG"
+          else
+            range="$TAG"
+          fi
+          {
+            echo "## Changes"
+            echo
+            git log --no-merges --reverse --format='- %s' "$range"
+            if [[ -n "$previous" ]]; then
+              echo
+              echo "**Full diff:** https://github.com/$GITHUB_REPOSITORY/compare/$previous...$TAG"
+            fi
+          } > notes.md
+          cat notes.md
+
+      # Re-running the workflow replaces the files and notes of an existing release.
       - name: Publish
         run: |
           prerelease=
           [[ "$TAG" == *-* ]] && prerelease=--prerelease
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh release upload "$TAG" release/* --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" --notes-file notes.md --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$TAG" release/* --repo "$GITHUB_REPOSITORY" \
-              --title "ClipViewer Desktop ${{ needs.version.outputs.version }}" --generate-notes $prerelease
+              --title "ClipViewer Desktop ${{ needs.version.outputs.version }}" --notes-file notes.md $prerelease
           fi
