@@ -33,6 +33,16 @@ ApplicationWindow {
     // Playback speed, one of playbackRates ([ and ] step through them)
     readonly property var playbackRates: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
     property real playbackRate: 1
+    // How the picture is shown (the View popup; A / Z / R). Only the view: exports are unchanged.
+    // Aspect: width / height, 0 for the video's own. Zoom: a scale, 0 to fill the area. Rotation:
+    // clockwise degrees on top of the video's own.
+    readonly property var videoAspects: [0, 16 / 9, 4 / 3, 21 / 9, 1]
+    readonly property var videoZooms: [1, 0, 1.5, 2]
+    property real videoAspect: 0
+    property real videoZoom: 1
+    property int videoRotation: 0
+    readonly property bool viewIsDefault: videoAspect === 0 && videoZoom === 1 && videoRotation === 0
+
     // The active audio and subtitle tracks (-1: none); see setAudioTrack
     property int audioTrack: 0
     property int subtitleTrack: -1
@@ -197,6 +207,16 @@ ApplicationWindow {
         return rate + "Ã—"
     }
 
+    function cycle(list, value) {
+        return list[(list.indexOf(value) + 1) % list.length] // -1 + 1: a value not in the list goes to the first
+    }
+
+    function resetView() {
+        videoAspect = 0
+        videoZoom = 1
+        videoRotation = 0
+    }
+
     // Qt doesn't signal a change of the active tracks, so bindings use these copies.
     function setAudioTrack(index) {
         player.activeAudioTrack = index
@@ -256,6 +276,7 @@ ApplicationWindow {
         onSourceChanged: {
             window.position = 0
             window.previewing = false
+            window.resetView()
             if (source.toString() !== "") {
                 pause() // loads the first frame without playing
                 window.editor.requestStill(0)
@@ -338,6 +359,9 @@ ApplicationWindow {
     Shortcut { sequence: "]"; onActivated: window.stepPlaybackRate(1) }
     Shortcut { sequence: "B"; onActivated: window.cycleAudioTrack() }
     Shortcut { sequence: "V"; onActivated: window.cycleSubtitleTrack() }
+    Shortcut { sequence: "A"; onActivated: window.videoAspect = window.cycle(window.videoAspects, window.videoAspect) }
+    Shortcut { sequence: "Z"; onActivated: window.videoZoom = window.cycle(window.videoZooms, window.videoZoom) }
+    Shortcut { sequence: "R"; onActivated: window.videoRotation = (window.videoRotation + 90) % 360 }
     Shortcut { sequence: "F"; onActivated: window.toggleFullScreen() }
     Shortcut { sequence: "Ctrl+T"; onActivated: window.editor.alwaysOnTop = !window.editor.alwaysOnTop }
     Shortcut { sequence: "Ctrl+H"; onActivated: window.controlsHidden = !window.controlsHidden }
@@ -558,30 +582,50 @@ ApplicationWindow {
 
         // ---- Video ----
         Rectangle {
+            id: videoArea
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: Theme.sunken
+            clip: true // a zoomed picture
 
-            VideoOutput {
-                id: videoOutput
-                anchors.fill: parent
+            // The picture's box: the shape of the chosen aspect, as large as fits once rotated, then
+            // zoomed around the middle. The video and the still both stretch to fill it.
+            Item {
+                id: videoFrame
+                readonly property bool sideways: window.videoRotation % 180 !== 0
+                readonly property real aspect: window.videoAspect > 0 ? window.videoAspect : window.editor.displayAspect
+                // The area in the box's own (unrotated) terms
+                readonly property real areaWidth: sideways ? parent.height : parent.width
+                readonly property real areaHeight: sideways ? parent.width : parent.height
+
+                anchors.centerIn: parent
+                width: Math.max(1, Math.min(areaWidth, areaHeight * aspect))
+                height: width / aspect
+                rotation: window.videoRotation
+                scale: window.videoZoom > 0 ? window.videoZoom : Math.max(areaWidth / width, areaHeight / height)
                 visible: window.editor.hasMedia
+
+                VideoOutput {
+                    id: videoOutput
+                    anchors.fill: parent
+                    fillMode: VideoOutput.Stretch
+                }
+
+                // The exact frame, decoded by ffmpeg, while paused (see CLAUDE.md, "Paused frames").
+                Image {
+                    anchors.fill: parent
+                    fillMode: Image.Stretch
+                    source: window.editor.stillSource
+                    visible: !window.playing && status === Image.Ready
+                    cache: false
+                    asynchronous: false
+                    smooth: true
+                }
             }
 
             Connections {
                 target: videoOutput.videoSink
                 function onVideoFrameChanged() { window.scrubSeekDone() }
-            }
-
-            // The exact frame, decoded by ffmpeg, while paused (see CLAUDE.md, "Paused frames").
-            Image {
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectFit
-                source: window.editor.stillSource
-                visible: !window.playing && window.editor.hasMedia && status === Image.Ready
-                cache: false
-                asynchronous: false
-                smooth: true
             }
 
             // The still is decoded without subtitles, so while it covers the video the player's
@@ -604,7 +648,7 @@ ApplicationWindow {
                     text: videoOutput.videoSink.subtitleText
                     textFormat: Text.PlainText
                     color: "white"
-                    font.pixelSize: Math.max(14, videoOutput.contentRect.height / 22)
+                    font.pixelSize: Math.max(14, Math.min(videoArea.height, videoFrame.height) / 22)
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     wrapMode: Text.WordWrap
@@ -885,6 +929,115 @@ ApplicationWindow {
                                         checked: window.subtitleTrack === index
                                         onClicked: window.setSubtitleTrack(index)
                                     }
+                                }
+                            }
+                        }
+                    }
+                    AppButton {
+                        id: viewButton
+                        quiet: true
+                        iconName: "aspect"
+                        enabled: window.editor.hasMedia
+                        checked: viewMenu.visible || !window.viewIsDefault
+                        toolTip: "Aspect ratio, zoom and rotation (A / Z / R)"
+                        onClicked: viewMenu.visible ? viewMenu.close() : viewMenu.open()
+
+                        Popup {
+                            id: viewMenu
+                            y: -height - 6
+                            x: Math.min(0, (viewButton.width - width) / 2)
+                            width: 340
+                            padding: 16
+                            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+                            background: Rectangle {
+                                radius: Theme.radius
+                                color: Theme.popup
+                                border.color: Theme.border
+                            }
+
+                            component Setting: ColumnLayout {
+                                property alias title: settingTitle.text
+                                property alias model: settingChoice.model
+                                property alias value: settingChoice.value
+                                signal activated(var value)
+                                Layout.fillWidth: true
+                                spacing: 6
+                                Text {
+                                    id: settingTitle
+                                    color: Theme.text2
+                                    font.pixelSize: 12
+                                    font.weight: Font.Medium
+                                }
+                                SegmentedControl {
+                                    id: settingChoice
+                                    Layout.fillWidth: true
+                                    fill: true
+                                    onActivated: value => parent.activated(value)
+                                }
+                            }
+
+                            contentItem: ColumnLayout {
+                                spacing: 14
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    Icon { name: "aspect"; size: 16; color: Theme.text2 }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: "View"
+                                        color: Theme.text
+                                        font.pixelSize: 14
+                                        font.weight: Font.DemiBold
+                                    }
+                                    AppButton {
+                                        quiet: true
+                                        text: "Reset"
+                                        implicitHeight: 26
+                                        enabled: !window.viewIsDefault
+                                        onClicked: window.resetView()
+                                    }
+                                }
+                                Setting {
+                                    title: "Aspect ratio (A)"
+                                    model: [
+                                        { label: "Auto", value: 0, toolTip: "The video's own shape" },
+                                        { label: "16:9", value: 16 / 9 },
+                                        { label: "4:3", value: 4 / 3 },
+                                        { label: "21:9", value: 21 / 9 },
+                                        { label: "1:1", value: 1 }
+                                    ]
+                                    value: window.videoAspect
+                                    onActivated: value => window.videoAspect = value
+                                }
+                                Setting {
+                                    title: "Zoom (Z)"
+                                    model: [
+                                        { label: "Fit", value: 1, toolTip: "The whole picture" },
+                                        { label: "Fill", value: 0, toolTip: "Fills the area, cropping the edges" },
+                                        { label: "1.5×", value: 1.5 },
+                                        { label: "2×", value: 2 }
+                                    ]
+                                    value: window.videoZoom
+                                    onActivated: value => window.videoZoom = value
+                                }
+                                Setting {
+                                    title: "Rotation (R)"
+                                    model: [
+                                        { label: "0°", value: 0 },
+                                        { label: "90°", value: 90 },
+                                        { label: "180°", value: 180 },
+                                        { label: "270°", value: 270 }
+                                    ]
+                                    value: window.videoRotation
+                                    onActivated: value => window.videoRotation = value
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Only changes how the video is shown here; exports are unchanged. Opening another video resets it."
+                                    color: Theme.text3
+                                    font.pixelSize: 12
+                                    wrapMode: Text.WordWrap
                                 }
                             }
                         }
