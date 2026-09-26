@@ -6,6 +6,30 @@ All notable changes to ClipViewer are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-26
+
+### Changed
+
+- The app is now called ClipViewer. The executable is `ClipViewer.exe`, it installs to
+  `Program Files\ClipViewer`, and the settings and logs are in `%LOCALAPPDATA%\ClipViewer`.
+  Settings from the old `ClipViewerDesktop` folder aren't carried over. The installer removes the
+  old executable, shortcuts and "Open with" entries.
+- New app icon: the trim brackets in Plum.
+- The release notes only list commits that change the app.
+
+## [0.7.0] - 2026-09-26
+
+### Added
+
+- Settings pane (gear button): turn the video click controls or the edge double-click off, set the
+  seek steps, and choose whether a video starts playing when opened.
+- Styles for the theme menu: Graphite, Material, Fluent and Adwaita, each usable with any palette.
+- Palettes come in pairs with a Dark/Light switch in the theme menu: Graphite, Slate, Plum, Sage,
+  Lavender, Azure and Steel.
+- Compact size, which shrinks the controls and bars.
+- Font setting to use any installed font for the UI.
+- The release notes are written from the commits since the previous tag.
+
 ## [0.6.1] - 2026-09-26
 
 ### Added
@@ -121,7 +145,9 @@ First release.
 
 - The set-at-playhead buttons from the trim bar.
 
-[Unreleased]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.4.0...v0.5.0
