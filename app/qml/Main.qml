@@ -235,6 +235,8 @@ ApplicationWindow {
     }
 
     function setSubtitleTrack(index) {
+        if (index >= 0 && !editor.canShowSubtitleTrack(index, player.subtitleTracks.length))
+            return // a bitmap track: Qt can't draw it and crashes trying
         player.activeSubtitleTrack = index
         subtitleTrack = player.activeSubtitleTrack
     }
@@ -248,8 +250,13 @@ ApplicationWindow {
 
     function cycleSubtitleTrack() {
         const count = player.subtitleTracks.length
-        if (count > 0)
-            setSubtitleTrack(subtitleTrack + 1 < count ? subtitleTrack + 1 : -1)
+        for (let next = subtitleTrack + 1; next < count; ++next) {
+            if (editor.canShowSubtitleTrack(next, count)) {
+                setSubtitleTrack(next)
+                return
+            }
+        }
+        setSubtitleTrack(-1)
     }
 
     function showOpenDialog() {
@@ -949,7 +956,11 @@ ApplicationWindow {
                                     delegate: TrackItem {
                                         required property var modelData
                                         required property int index
+                                        readonly property bool canShow:
+                                            window.editor.canShowSubtitleTrack(index, player.subtitleTracks.length)
                                         text: window.editor.trackLabel(modelData, index)
+                                            + (canShow ? "" : "  ·  image subtitles, can't be shown")
+                                        enabled: canShow
                                         checked: window.subtitleTrack === index
                                         onClicked: window.setSubtitleTrack(index)
                                     }

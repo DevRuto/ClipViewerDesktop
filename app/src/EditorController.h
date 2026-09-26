@@ -141,6 +141,11 @@ public:
     Q_INVOKABLE void resetReencode();
     // A MediaPlayer audio or subtitle track as "Track 2 · English · Commentary".
     Q_INVOKABLE QString trackLabel(const QMediaMetaData &track, int index) const;
+    // Whether the player can show subtitle track `index` (text, not bitmap); see cv::MediaInfo.
+    Q_INVOKABLE bool canShowSubtitleTrack(int index, int trackCount) const
+    {
+        return m_info && m_info->canShowSubtitleTrack(index, trackCount);
+    }
 
 signals:
     void mediaChanged();

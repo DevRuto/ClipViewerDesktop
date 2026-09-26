@@ -59,6 +59,16 @@ struct MediaInfo
         const double aspect = width * sampleAspectRatio / height;
         return rotation % 180 == 0 ? aspect : 1 / aspect;
     }
+
+    // Whether the player can show its subtitle track `index` (in the player's order, which is
+    // the file's). Qt only draws text subtitles, and its FFmpeg backend crashes when a bitmap
+    // track (DVD, Blu-ray PGS, DVB) is turned on during playback. playerTrackCount is how many
+    // subtitle tracks the player lists; if that doesn't match the probe, a track is only
+    // allowed when every subtitle stream is text.
+    bool canShowSubtitleTrack(int index, int playerTrackCount) const;
+
+    // subrip, ass, mov_text, webvtt, …: subtitles stored as text, not pictures.
+    static bool isTextSubtitleCodec(const QString &codec);
 };
 
 } // namespace cv
