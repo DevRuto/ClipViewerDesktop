@@ -33,6 +33,9 @@ ApplicationWindow {
     // Playback speed, one of playbackRates ([ and ] step through them)
     readonly property var playbackRates: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
     property real playbackRate: 1
+    // The active audio and subtitle tracks (-1: none); see setAudioTrack
+    property int audioTrack: 0
+    property int subtitleTrack: -1
 
     width: 1180
     height: 760
@@ -193,6 +196,30 @@ ApplicationWindow {
         return rate + "×"
     }
 
+    // Qt doesn't signal a change of the active tracks, so bindings use these copies.
+    function setAudioTrack(index) {
+        player.activeAudioTrack = index
+        audioTrack = player.activeAudioTrack
+    }
+
+    function setSubtitleTrack(index) {
+        player.activeSubtitleTrack = index
+        subtitleTrack = player.activeSubtitleTrack
+    }
+
+    // B / V: the next audio track, and the next subtitle track (after the last one, subtitles off)
+    function cycleAudioTrack() {
+        const count = player.audioTracks.length
+        if (count > 1)
+            setAudioTrack((audioTrack + 1) % count)
+    }
+
+    function cycleSubtitleTrack() {
+        const count = player.subtitleTracks.length
+        if (count > 0)
+            setSubtitleTrack(subtitleTrack + 1 < count ? subtitleTrack + 1 : -1)
+    }
+
     function showOpenDialog() {
         openDialog.open()
     }
@@ -237,6 +264,10 @@ ApplicationWindow {
                 window.previewing = false
                 window.seekTo(window.editor.duration - window.editor.frameDuration)
             }
+        }
+        onTracksChanged: {
+            window.audioTrack = activeAudioTrack
+            window.subtitleTrack = activeSubtitleTrack
         }
         onErrorOccurred: (error, errorString) => window.editor.reportPlaybackError(errorString)
     }
@@ -283,6 +314,8 @@ ApplicationWindow {
     Shortcut { sequence: "Down"; onActivated: window.changeVolume(-0.05) }
     Shortcut { sequence: "["; onActivated: window.stepPlaybackRate(-1) }
     Shortcut { sequence: "]"; onActivated: window.stepPlaybackRate(1) }
+    Shortcut { sequence: "B"; onActivated: window.cycleAudioTrack() }
+    Shortcut { sequence: "V"; onActivated: window.cycleSubtitleTrack() }
     Shortcut { sequence: "F"; onActivated: window.toggleFullScreen() }
     Shortcut { sequence: "Ctrl+H"; onActivated: window.controlsHidden = !window.controlsHidden }
     Shortcut { sequence: "Esc"; enabled: window.fullScreen; onActivated: window.toggleFullScreen() }
@@ -439,6 +472,33 @@ ApplicationWindow {
                 cache: false
                 asynchronous: false
                 smooth: true
+            }
+
+            // The still is decoded without subtitles, so while it covers the video the player's
+            // current cue is drawn over it. White on black like VideoOutput's own, whatever the palette.
+            // Qt only sets the cue while playing: after a paused seek into a cue it stays empty.
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: parent.height * 0.05
+                width: Math.min(parent.width * 0.9, pausedSubtitle.implicitWidth + 16)
+                height: pausedSubtitle.implicitHeight + 8
+                color: Qt.rgba(0, 0, 0, 0.6)
+                visible: !window.playing && window.editor.hasMedia && window.subtitleTrack >= 0
+                    && pausedSubtitle.text !== ""
+
+                Text {
+                    id: pausedSubtitle
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    text: videoOutput.videoSink.subtitleText
+                    textFormat: Text.PlainText
+                    color: "white"
+                    font.pixelSize: Math.max(14, videoOutput.contentRect.height / 22)
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WordWrap
+                }
             }
 
             MouseArea {
@@ -642,6 +702,83 @@ ApplicationWindow {
 
                     Item { Layout.fillWidth: true }
 
+                    AppButton {
+                        id: tracksButton
+                        quiet: true
+                        iconName: "captions"
+                        visible: player.audioTracks.length > 1 || player.subtitleTracks.length > 0
+                        checked: tracksMenu.visible || window.subtitleTrack >= 0
+                        toolTip: "Audio and subtitles (B / V)"
+                        onClicked: tracksMenu.visible ? tracksMenu.close() : tracksMenu.open()
+
+                        Popup {
+                            id: tracksMenu
+                            y: -height - 6
+                            x: Math.min(0, (tracksButton.width - width) / 2)
+                            padding: 4
+                            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+                            background: Rectangle {
+                                radius: Theme.radius
+                                color: Theme.popup
+                                border.color: Theme.border
+                            }
+
+                            component SectionTitle: Text {
+                                leftPadding: 12
+                                topPadding: 6
+                                bottomPadding: 2
+                                color: Theme.text3
+                                font.pixelSize: 11
+                                font.weight: Font.Medium
+                            }
+                            component TrackItem: AppButton {
+                                width: Math.max(200, implicitWidth)
+                                quiet: true
+                                onClicked: tracksMenu.close()
+                            }
+
+                            contentItem: Column {
+                                spacing: 2
+
+                                SectionTitle { visible: player.audioTracks.length > 1; text: "Audio" }
+                                Repeater {
+                                    model: player.audioTracks.length > 1 ? player.audioTracks : []
+                                    delegate: TrackItem {
+                                        required property var modelData
+                                        required property int index
+                                        text: window.editor.trackLabel(modelData, index)
+                                        checked: window.audioTrack === index
+                                        onClicked: window.setAudioTrack(index)
+                                    }
+                                }
+
+                                Rectangle {
+                                    visible: player.audioTracks.length > 1 && player.subtitleTracks.length > 0
+                                    width: parent.width
+                                    height: 1
+                                    color: Theme.border
+                                }
+
+                                SectionTitle { visible: player.subtitleTracks.length > 0; text: "Subtitles" }
+                                TrackItem {
+                                    visible: player.subtitleTracks.length > 0
+                                    text: "Off"
+                                    checked: window.subtitleTrack < 0
+                                    onClicked: window.setSubtitleTrack(-1)
+                                }
+                                Repeater {
+                                    model: player.subtitleTracks
+                                    delegate: TrackItem {
+                                        required property var modelData
+                                        required property int index
+                                        text: window.editor.trackLabel(modelData, index)
+                                        checked: window.subtitleTrack === index
+                                        onClicked: window.setSubtitleTrack(index)
+                                    }
+                                }
+                            }
+                        }
+                    }
                     AppButton {
                         id: speedButton
                         quiet: true

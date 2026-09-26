@@ -10,6 +10,7 @@
 #include <QCache>
 #include <QElapsedTimer>
 #include <QImage>
+#include <QMediaMetaData>
 #include <QObject>
 #include <QTimer>
 #include <QUrl>
@@ -123,6 +124,8 @@ public:
     // Sets one re-encode setting; a value that isn't one of its choices falls back to the default.
     Q_INVOKABLE void setReencodeOption(const QString &key, const QVariant &value);
     Q_INVOKABLE void resetReencode();
+    // A MediaPlayer audio or subtitle track as "Track 2 · English · Commentary".
+    Q_INVOKABLE QString trackLabel(const QMediaMetaData &track, int index) const;
 
 signals:
     void mediaChanged();

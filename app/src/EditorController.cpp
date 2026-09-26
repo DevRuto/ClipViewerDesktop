@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonObject>
+#include <QLocale>
 #include <QPointer>
 #include <QThreadPool>
 
@@ -253,6 +254,18 @@ void EditorController::reportPlaybackError(const QString &message)
         reason = QStringLiteral("unknown error");
     setStatus(name.isEmpty() ? QStringLiteral("Playback error: %1").arg(reason)
                              : QStringLiteral("Can't play %1: %2").arg(name, reason));
+}
+
+QString EditorController::trackLabel(const QMediaMetaData &track, int index) const
+{
+    QStringList parts{QStringLiteral("Track %1").arg(index + 1)};
+    const auto language = track.value(QMediaMetaData::Language).value<QLocale::Language>();
+    if (language != QLocale::AnyLanguage && language != QLocale::C)
+        parts << QLocale::languageToString(language);
+    const QString title = track.stringValue(QMediaMetaData::Title).trimmed();
+    if (!title.isEmpty() && !parts.contains(title))
+        parts << title;
+    return parts.join(QStringLiteral(" · "));
 }
 
 // ---- Trim range ----
