@@ -434,7 +434,7 @@ ApplicationWindow {
                     quiet: true
                     iconName: "info"
                     checked: infoPanel.visible
-                    toolTip: "Media info"
+                    toolTip: infoPanel.visible ? "" : "Media info"
                     enabled: window.editor.hasMedia
                     onClicked: infoPanel.visible ? infoPanel.close() : infoPanel.open()
 
@@ -522,7 +522,7 @@ ApplicationWindow {
                     quiet: true
                     iconName: "palette"
                     checked: themeMenu.visible
-                    toolTip: "Theme"
+                    toolTip: themeMenu.visible ? "" : "Theme"
                     onClicked: themeMenu.visible ? themeMenu.close() : themeMenu.open()
 
                     Popup {
@@ -873,9 +873,11 @@ ApplicationWindow {
                         id: tracksButton
                         quiet: true
                         iconName: "captions"
-                        visible: player.audioTracks.length > 1 || player.subtitleTracks.length > 0
+                        // Always there, so it can be found; the menu says when there's nothing to pick
+                        readonly property bool hasChoices: player.audioTracks.length > 1 || player.subtitleTracks.length > 0
+                        enabled: window.editor.hasMedia
                         checked: tracksMenu.visible || window.subtitleTrack >= 0
-                        toolTip: "Audio and subtitles (B / V)"
+                        toolTip: tracksMenu.visible ? "" : "Audio and subtitles (B / V)"
                         onClicked: tracksMenu.visible ? tracksMenu.close() : tracksMenu.open()
 
                         Popup {
@@ -907,6 +909,14 @@ ApplicationWindow {
 
                             contentItem: Column {
                                 spacing: 2
+
+                                Text {
+                                    visible: !tracksButton.hasChoices
+                                    padding: 12
+                                    text: (player.audioTracks.length === 0 ? "No audio" : "One audio track")
+                                        + " and no subtitles in this video."
+                                    color: Theme.text2
+                                }
 
                                 SectionTitle { visible: player.audioTracks.length > 1; text: "Audio" }
                                 Repeater {
@@ -953,7 +963,7 @@ ApplicationWindow {
                         iconName: "aspect"
                         enabled: window.editor.hasMedia
                         checked: viewMenu.visible || !window.viewIsDefault
-                        toolTip: "Aspect ratio, zoom and rotation (A / Z / R)"
+                        toolTip: viewMenu.visible ? "" : "Aspect ratio, zoom and rotation (A / Z / R)"
                         onClicked: viewMenu.visible ? viewMenu.close() : viewMenu.open()
 
                         Popup {
@@ -1063,7 +1073,7 @@ ApplicationWindow {
                         text: window.formatRate(window.playbackRate)
                         font.family: Theme.monoFont
                         checked: speedMenu.visible || window.playbackRate !== 1
-                        toolTip: "Playback speed ([ / ])"
+                        toolTip: speedMenu.visible ? "" : "Playback speed ([ / ])"
                         onClicked: speedMenu.visible ? speedMenu.close() : speedMenu.open()
 
                         Popup {
@@ -1283,7 +1293,7 @@ ApplicationWindow {
                         Layout.alignment: Qt.AlignBottom
                         iconName: "sliders"
                         checked: reencodeMenu.visible
-                        toolTip: "Re-encode settings"
+                        toolTip: reencodeMenu.visible ? "" : "Re-encode settings"
                         // Opening the settings picks re-encoding, which is what they apply to.
                         onClicked: {
                             if (reencodeMenu.visible) {
