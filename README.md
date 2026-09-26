@@ -21,6 +21,39 @@ It's built for Windows, Linux and macOS, but only Windows has been tested.
 > **Note:** Linux and macOS haven't been tested. CI builds the project on Linux and runs the
 > automated tests there, but nobody has run the app on Linux yet. macOS hasn't been built at all.
 
+## Hotkeys
+
+| Key | Action |
+| --- | --- |
+| Space, K | Play / pause |
+| ← / → | Back / forward 5 seconds |
+| J / L | Back / forward 10 seconds |
+| , / . | Back / forward one frame |
+| Home / End | Go to the start / end (the trim points in edit mode) |
+| ↑ / ↓ | Volume up / down |
+| M | Mute |
+| [ / ] | Slower / faster playback |
+| B | Next audio track |
+| V | Next subtitle track |
+| G / H | Subtitles 0.1 s earlier / later |
+| A | Cycle the aspect ratio |
+| Z | Cycle the zoom |
+| R | Rotate 90° |
+| F | Full screen (Esc to leave) |
+| Ctrl+H | Hide the controls |
+| Ctrl+T | Always on top |
+| Ctrl+O | Open a video |
+| Ctrl+S | Save the current frame as a PNG |
+| E | Edit mode on / off |
+
+In edit mode:
+
+| Key | Action |
+| --- | --- |
+| I / O | Set the start / end to the playhead |
+| P | Preview the cut |
+| Ctrl+E | Export |
+
 ## Requirements
 
 - Qt 6.12, with the Qt Multimedia, Qt Shader Tools, Qt Image Formats and Qt TaskTree modules
