@@ -22,6 +22,10 @@ const QString LastFrameFolder = QStringLiteral("lastFrameFolder");
 const QString Theme = QStringLiteral("theme");
 const QString AlwaysOnTop = QStringLiteral("alwaysOnTop");
 const QString ClickControls = QStringLiteral("clickControls");
+const QString EdgeDoubleClick = QStringLiteral("edgeDoubleClick");
+const QString ShortSkip = QStringLiteral("shortSkip");
+const QString LongSkip = QStringLiteral("longSkip");
+const QString Autoplay = QStringLiteral("autoplay");
 const QString Subtitles = QStringLiteral("subtitles");
 
 } // namespace
@@ -53,6 +57,10 @@ AppSettings AppSettings::load(const QString &path)
     settings.theme = json.take(Theme).toString(settings.theme);
     settings.alwaysOnTop = json.take(AlwaysOnTop).toBool(settings.alwaysOnTop);
     settings.clickControls = json.take(ClickControls).toBool(settings.clickControls);
+    settings.edgeDoubleClick = json.take(EdgeDoubleClick).toBool(settings.edgeDoubleClick);
+    settings.shortSkip = std::clamp(json.take(ShortSkip).toInt(settings.shortSkip), 1, 60);
+    settings.longSkip = std::clamp(json.take(LongSkip).toInt(settings.longSkip), 1, 600);
+    settings.autoplay = json.take(Autoplay).toBool(settings.autoplay);
     settings.subtitles = SubtitleStyle::fromJson(json.take(Subtitles).toObject());
     settings.m_unknown = json;
     return settings;
@@ -70,6 +78,10 @@ bool AppSettings::save(const QString &path) const
     json[Theme] = theme;
     json[AlwaysOnTop] = alwaysOnTop;
     json[ClickControls] = clickControls;
+    json[EdgeDoubleClick] = edgeDoubleClick;
+    json[ShortSkip] = shortSkip;
+    json[LongSkip] = longSkip;
+    json[Autoplay] = autoplay;
     json[Subtitles] = subtitles.toJson();
 
     QDir().mkpath(QFileInfo(path).absolutePath());
@@ -86,7 +98,8 @@ bool AppSettings::operator==(const AppSettings &other) const
         && reencode == other.reencode && lastExportFolder == other.lastExportFolder
         && lastFrameFolder == other.lastFrameFolder && theme == other.theme
         && alwaysOnTop == other.alwaysOnTop && clickControls == other.clickControls
-        && subtitles == other.subtitles
+        && edgeDoubleClick == other.edgeDoubleClick && shortSkip == other.shortSkip
+        && longSkip == other.longSkip && autoplay == other.autoplay && subtitles == other.subtitles
         && m_unknown == other.m_unknown;
 }
 

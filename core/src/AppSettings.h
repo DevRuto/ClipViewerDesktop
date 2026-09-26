@@ -28,6 +28,14 @@ struct AppSettings
     bool alwaysOnTop = false;
     // Clicking the video plays/pauses, a double-click on an edge seeks (PlayerClickGesture).
     bool clickControls = true;
+    // The double-click on an edge; off leaves every click a plain play/pause.
+    bool edgeDoubleClick = true;
+    // Seek steps in whole seconds: the short one for Left/Right, the long one for J/L and the
+    // double-click on an edge.
+    int shortSkip = 5; // 1-60
+    int longSkip = 10; // 1-600
+    // Start playing as soon as a video opens, instead of showing its first frame.
+    bool autoplay = false;
     // Subtitle size, background and position.
     SubtitleStyle subtitles;
 

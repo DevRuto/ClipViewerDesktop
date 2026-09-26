@@ -169,7 +169,9 @@ are MPEG-TS files in a hidden `.<name>.parts-<guid>` folder next to the output, 
   shows the trim handles, start/end fields, preview and export; their shortcuts (I, O, P, Ctrl+E)
   only work in edit mode. The trim range is kept when switching back and forth.
 - Clicking the video: `EditorController::videoClick` returns the `PlayerClickGesture` action.
-  A double-click on an edge undoes the first click's toggle, then seeks 10 s.
+  A double-click on an edge undoes the first click's toggle, then seeks by the long skip (10 s by
+  default). The settings pane (gear, `SettingsPane.qml`) can turn clicks or the edge double-click
+  off and sets the skip steps and autoplay on open.
 
 ## Subtitles
 

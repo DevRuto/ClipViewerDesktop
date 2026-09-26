@@ -120,6 +120,10 @@ private slots:
         settings.theme = "paper";
         settings.alwaysOnTop = true;
         settings.clickControls = false;
+        settings.edgeDoubleClick = false;
+        settings.shortSkip = 2;
+        settings.longSkip = 30;
+        settings.autoplay = true;
         settings.subtitles.size = 130;
         QVERIFY(settings.save(path));
 
@@ -132,6 +136,10 @@ private slots:
         QCOMPARE(json.value("theme").toString(), QString("paper"));
         QCOMPARE(json.value("alwaysOnTop").toBool(), true);
         QCOMPARE(json.value("clickControls").toBool(true), false);
+        QCOMPARE(json.value("edgeDoubleClick").toBool(true), false);
+        QCOMPARE(json.value("shortSkip").toInt(), 2);
+        QCOMPARE(json.value("longSkip").toInt(), 30);
+        QCOMPARE(json.value("autoplay").toBool(), true);
         QCOMPARE(json.value("subtitles").toObject().value("size").toInt(), 130);
         QCOMPARE(AppSettings::load(path), settings);
     }
@@ -139,13 +147,18 @@ private slots:
     void settings_invalidValues_fallBack()
     {
         QTemporaryDir dir;
-        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\", \"theme\": 3, \"alwaysOnTop\": 1, \"clickControls\": 0 }");
+        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\", \"theme\": 3, \"alwaysOnTop\": 1, \"clickControls\": 0, "
+                  "\"edgeDoubleClick\": \"no\", \"shortSkip\": 0, \"longSkip\": 9999, \"autoplay\": 1 }");
         const AppSettings settings = AppSettings::load(dir.filePath("s.json"));
         QCOMPARE(settings.volume, 1.0);
         QCOMPARE(settings.muted, false);
         QCOMPARE(settings.theme, QString("graphite"));
         QCOMPARE(settings.alwaysOnTop, false);
         QCOMPARE(settings.clickControls, true);
+        QCOMPARE(settings.edgeDoubleClick, true);
+        QCOMPARE(settings.shortSkip, 1);
+        QCOMPARE(settings.longSkip, 600);
+        QCOMPARE(settings.autoplay, false);
     }
 
     void settings_garbage_givesDefaults()

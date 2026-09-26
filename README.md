@@ -26,8 +26,8 @@ It's built for Windows, Linux and macOS, but only Windows has been tested.
 | Key | Action |
 | --- | --- |
 | Space, K | Play / pause |
-| ← / → | Back / forward 5 seconds |
-| J / L | Back / forward 10 seconds |
+| ← / → | Back / forward 5 seconds (the step can be changed in Settings) |
+| J / L | Back / forward 10 seconds (likewise) |
 | , / . | Back / forward one frame |
 | Home / End | Go to the start / end (the trim points in edit mode) |
 | ↑ / ↓ | Volume up / down |

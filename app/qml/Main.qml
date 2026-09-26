@@ -279,7 +279,11 @@ ApplicationWindow {
             window.position = 0
             window.previewing = false
             window.resetView()
-            if (source.toString() !== "") {
+            if (source.toString() === "")
+                return
+            if (window.editor.autoplay) {
+                window.play()
+            } else {
                 pause() // loads the first frame without playing
                 window.editor.requestStill(0)
             }
@@ -345,10 +349,10 @@ ApplicationWindow {
     // ---- Shortcuts (as in the ClipViewer web player) ----
 
     Shortcut { sequences: ["Space", "K"]; onActivated: window.togglePlay() }
-    Shortcut { sequence: "Left"; onActivated: window.skip(-5) }
-    Shortcut { sequence: "Right"; onActivated: window.skip(5) }
-    Shortcut { sequence: "J"; onActivated: window.skip(-10) }
-    Shortcut { sequence: "L"; onActivated: window.skip(10) }
+    Shortcut { sequence: "Left"; onActivated: window.skip(-window.editor.shortSkip) }
+    Shortcut { sequence: "Right"; onActivated: window.skip(window.editor.shortSkip) }
+    Shortcut { sequence: "J"; onActivated: window.skip(-window.editor.longSkip) }
+    Shortcut { sequence: "L"; onActivated: window.skip(window.editor.longSkip) }
     Shortcut { sequence: ","; onActivated: window.stepFrames(-1) }
     Shortcut { sequence: "."; onActivated: window.stepFrames(1) }
     Shortcut { sequence: "E"; onActivated: window.toggleEditMode() }
@@ -777,7 +781,7 @@ ApplicationWindow {
                     const action = window.editor.videoClick(mouse.x / width)
                     window.togglePlay()
                     if (action !== 0)
-                        window.skip(action === 1 ? -10 : 10)
+                        window.skip(action === 1 ? -window.editor.longSkip : window.editor.longSkip)
                 }
             }
 

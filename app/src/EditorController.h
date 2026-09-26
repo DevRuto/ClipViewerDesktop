@@ -60,6 +60,11 @@ class EditorController : public QObject
     Q_PROPERTY(bool alwaysOnTop READ alwaysOnTop WRITE setAlwaysOnTop NOTIFY alwaysOnTopChanged)
     // Click to play/pause, double-click an edge to seek; off leaves clicks on the video alone.
     Q_PROPERTY(bool clickControls READ clickControls WRITE setClickControls NOTIFY clickControlsChanged)
+    Q_PROPERTY(bool edgeDoubleClick READ edgeDoubleClick WRITE setEdgeDoubleClick NOTIFY edgeDoubleClickChanged)
+    // Seek steps in seconds: Left/Right, and J/L plus the double-click on an edge.
+    Q_PROPERTY(int shortSkip READ shortSkip WRITE setShortSkip NOTIFY shortSkipChanged)
+    Q_PROPERTY(int longSkip READ longSkip WRITE setLongSkip NOTIFY longSkipChanged)
+    Q_PROPERTY(bool autoplay READ autoplay WRITE setAutoplay NOTIFY autoplayChanged)
     Q_PROPERTY(bool exporting READ exporting NOTIFY exportingChanged)
     Q_PROPERTY(double exportProgress READ exportProgress NOTIFY exportProgressChanged)
     Q_PROPERTY(QString status READ status NOTIFY statusChanged)
@@ -105,6 +110,14 @@ public:
     void setAlwaysOnTop(bool value);
     bool clickControls() const { return m_settings.clickControls; }
     void setClickControls(bool value);
+    bool edgeDoubleClick() const { return m_settings.edgeDoubleClick; }
+    void setEdgeDoubleClick(bool value);
+    int shortSkip() const { return m_settings.shortSkip; }
+    void setShortSkip(int seconds);
+    int longSkip() const { return m_settings.longSkip; }
+    void setLongSkip(int seconds);
+    bool autoplay() const { return m_settings.autoplay; }
+    void setAutoplay(bool value);
     bool exporting() const { return m_exporting; }
     double exportProgress() const { return m_exportProgress; }
     QString status() const { return m_status; }
@@ -135,7 +148,7 @@ public:
     Q_INVOKABLE void requestThumbnail(double seconds);
     Q_INVOKABLE void clearThumbnail();
     // What a click at x (0-1 across the video) does: 0 toggle play, 1 undo toggle and seek back,
-    // 2 undo toggle and seek forward. See PlayerClickGesture.
+    // 2 undo toggle and seek forward. See PlayerClickGesture. Always 0 with edgeDoubleClick off.
     Q_INVOKABLE int videoClick(double x);
     // "<last export folder, or the source's>/<name>_clip.mp4".
     Q_INVOKABLE QUrl suggestedExportUrl() const;
@@ -177,6 +190,10 @@ signals:
     void themeChanged();
     void alwaysOnTopChanged();
     void clickControlsChanged();
+    void edgeDoubleClickChanged();
+    void shortSkipChanged();
+    void longSkipChanged();
+    void autoplayChanged();
     void exportingChanged();
     void exportProgressChanged();
     void statusChanged();

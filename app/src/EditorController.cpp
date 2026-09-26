@@ -20,6 +20,7 @@
 #include <QSaveFile>
 #include <QThreadPool>
 
+#include <algorithm>
 #include <cmath>
 
 namespace {
@@ -208,6 +209,44 @@ void EditorController::setClickControls(bool value)
     m_settings.clickControls = value;
     saveSettings();
     emit clickControlsChanged();
+}
+
+void EditorController::setEdgeDoubleClick(bool value)
+{
+    if (m_settings.edgeDoubleClick == value)
+        return;
+    m_settings.edgeDoubleClick = value;
+    saveSettings();
+    emit edgeDoubleClickChanged();
+}
+
+void EditorController::setShortSkip(int seconds)
+{
+    seconds = std::clamp(seconds, 1, 60);
+    if (m_settings.shortSkip == seconds)
+        return;
+    m_settings.shortSkip = seconds;
+    saveSettings();
+    emit shortSkipChanged();
+}
+
+void EditorController::setLongSkip(int seconds)
+{
+    seconds = std::clamp(seconds, 1, 600);
+    if (m_settings.longSkip == seconds)
+        return;
+    m_settings.longSkip = seconds;
+    saveSettings();
+    emit longSkipChanged();
+}
+
+void EditorController::setAutoplay(bool value)
+{
+    if (m_settings.autoplay == value)
+        return;
+    m_settings.autoplay = value;
+    saveSettings();
+    emit autoplayChanged();
 }
 
 void EditorController::saveSettings()
@@ -587,6 +626,8 @@ void EditorController::clearThumbnail()
 
 int EditorController::videoClick(double x)
 {
+    if (!m_settings.edgeDoubleClick)
+        return static_cast<int>(cv::PlayerClickAction::TogglePlay);
     return static_cast<int>(m_clickGesture.click(x, m_clock.elapsed()));
 }
 
