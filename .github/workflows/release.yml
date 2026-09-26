@@ -280,7 +280,8 @@ jobs:
         run: sha256sum * > SHA256SUMS.txt
 
       # The notes list the commit subjects since the previous tag. A stable release is compared
-      # with the previous stable one, so it also covers what went out in its pre-releases.
+      # with the previous stable one, so it also covers what went out in its pre-releases. Only
+      # commits that touch what ships are listed, not docs, tests or CI.
       - name: Release notes
         run: |
           exclude=()
@@ -293,7 +294,7 @@ jobs:
           {
             echo "## Changes"
             echo
-            git log --no-merges --reverse --format='- %s' "$range"
+            git log --no-merges --reverse --format='- %s' "$range" -- app core cmake packaging CMakeLists.txt
             if [[ -n "$previous" ]]; then
               echo
               echo "**Full diff:** https://github.com/$GITHUB_REPOSITORY/compare/$previous...$TAG"
