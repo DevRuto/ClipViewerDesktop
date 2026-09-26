@@ -54,6 +54,61 @@ In edit mode:
 | P | Preview the cut |
 | Ctrl+E | Export |
 
+## Logs and crash reports
+
+The app keeps a log of each run: what was opened and exported, every error in full (the status
+bar only shows the first line), and Qt's own warnings. If the app crashes, it adds a crash
+report to the end of that run's log. The next time you start the app, it tells you so in the
+status bar.
+
+To report a problem, open the log folder and attach the files to the issue. To open it, use
+**Open log folder** at the bottom of the palette menu (top right), or the button in the crash
+notice. The folder is here:
+
+| OS | Log folder |
+| --- | --- |
+| Windows | `%LOCALAPPDATA%\ClipViewerDesktop\logs` |
+| Linux | `~/.local/share/ClipViewerDesktop/logs` |
+| macOS | `~/Library/Application Support/ClipViewerDesktop/logs` |
+
+- `app.log` is the current (or last) run, `app.1.log` the one before it, and so on up to
+  `app.4.log`. After a crash, restarting the app moves that run's log to `app.1.log`, so attach
+  that one.
+- `crash-<date>-<time>.dmp` (Windows only) is a minidump of the crash. It holds the stacks of
+  all threads, so attach it too. The newest three are kept.
+
+The logs contain the names and paths of the videos you opened. They stay on your computer; the
+app never uploads anything.
+
+### Reading a crash report
+
+A report looks like this:
+
+```text
+=== CRASH 2026-09-26 02:32:28 ===
+The app crashed.
+Exception 0xc0000005 (access violation) at 0x7ff747599e1e
+  writing address 0x0
+Thread 0x20d8, stack:
+  #0  ClipViewerDesktop.exe+0x49e1e
+  ...
+  #10 Qt6Core.dll+0x97bb8  QCoreApplication::notifyInternal2(QObject*, QEvent*)+0x1a8
+```
+
+Functions exported by Qt and Windows DLLs are named. Frames in `ClipViewerDesktop.exe` show only
+an offset, because Windows' symbol library can't read MinGW's debug info. To turn an offset into
+a function and a line, add it to the exe's image base (`0x140000000`) and run `addr2line` from
+MinGW on the build that crashed:
+
+```powershell
+addr2line -f -C -p -e build\debug\ClipViewerDesktop.exe 0x140049e1e
+```
+
+Release builds have no debug info. GCC generates the same code with or without `-g`, so rebuild
+the same commit in Release with `-DCMAKE_CXX_FLAGS=-g` and the same compiler, then use that exe.
+To try the crash handler, start the app with `CLIPVIEWER_CRASH_TEST` set to `segv`, `abort`,
+`throw` or `fatal`. It crashes a second after starting.
+
 ## Requirements
 
 - Qt 6.12, with the Qt Multimedia, Qt Shader Tools, Qt Image Formats and Qt TaskTree modules
@@ -120,7 +175,8 @@ On Linux, run `build/unix-debug/ClipViewerDesktop`. On macOS, run
 `build/unix-debug/ClipViewerDesktop.app/Contents/MacOS/ClipViewerDesktop`.
 
 Qt sends its log to the debugger on Windows. Set `QT_FORCE_STDERR_LOGGING=1` to print QML
-warnings and errors to the console.
+warnings and errors to the console. Everything also goes to `app.log` (see
+[Logs and crash reports](#logs-and-crash-reports)).
 
 The code is split into three parts: `core/` is the UI-free library, with the media and FFmpeg
 logic. `app/` is the Qt Quick executable. `tests/` holds the Qt Test suites.
