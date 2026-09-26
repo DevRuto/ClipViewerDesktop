@@ -6,6 +6,49 @@ All notable changes to ClipViewer Desktop are documented here. The format is bas
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-26
+
+### Added
+
+- Each run is logged to `logs\app.log` in `%LOCALAPPDATA%\ClipViewerDesktop`, keeping the last
+  four runs. A crash writes a stack trace to the log, plus a minidump on Windows, and the next
+  start shows a notice. The README explains where to find them.
+- Tests that play every supported format (mp4, mov, mkv, webm, avi; H.264, HEVC, VP8, VP9, AV1,
+  MPEG-4) through Qt Multimedia.
+
+### Fixed
+
+- The subtitle tests no longer fail with ffmpeg 6.x.
+
+## [0.6.0] - 2026-09-26
+
+### Added
+
+- Playback speed control ([ and ]).
+- Audio and subtitle track menu (B and V).
+- Subtitles drawn by the app: `.srt`, `.ass`, `.ssa` and `.vtt` files next to the video, loaded
+  from the menu or dropped on the window, embedded text tracks and DVD picture subtitles.
+- Subtitle settings: size, background (box or outline) and position, saved in the settings, and a
+  per-video timing offset (G and H).
+- Always-on-top toggle (Ctrl+T), kept in the settings.
+- Save the current frame as a full-size PNG (Ctrl+S).
+- Media info panel with each stream's codec, size, bitrate and language.
+- Aspect ratio, zoom and rotation for the view (A, Z, R).
+- Hotkeys section and new screenshots in the README.
+
+### Changed
+
+- The tracks button is always shown, and a menu button's tooltip is hidden while its menu is open.
+- Only one popup is open at a time.
+- Linux CI tests against the same pinned FFmpeg build as the release.
+
+### Fixed
+
+- Playback errors show in the status bar.
+- Pinning the window on top no longer removes the title bar.
+- Garbled characters in the UI.
+- Picture subtitle tracks no longer crash Qt's FFmpeg backend.
+
 ## [0.5.0] - 2026-09-25
 
 ### Added
@@ -78,7 +121,9 @@ First release.
 
 - The set-at-playhead buttons from the trim bar.
 
-[Unreleased]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.2.0...v0.3.0
