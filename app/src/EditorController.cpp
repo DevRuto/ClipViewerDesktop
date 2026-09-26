@@ -201,6 +201,15 @@ void EditorController::setAlwaysOnTop(bool value)
     emit alwaysOnTopChanged();
 }
 
+void EditorController::setClickControls(bool value)
+{
+    if (m_settings.clickControls == value)
+        return;
+    m_settings.clickControls = value;
+    saveSettings();
+    emit clickControlsChanged();
+}
+
 void EditorController::saveSettings()
 {
     m_settingsSave.start(); // a volume drag changes it many times a second

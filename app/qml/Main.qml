@@ -604,6 +604,22 @@ ApplicationWindow {
                     }
                 }
                 AppButton {
+                    id: settingsButton
+                    quiet: true
+                    iconName: "settings"
+                    checked: settingsPane.visible
+                    toolTip: settingsPane.visible ? "" : "Settings"
+                    onClicked: settingsPane.visible ? settingsPane.close() : settingsPane.open()
+
+                    SettingsPane {
+                        id: settingsPane
+                        onAboutToShow: window.popupOpened(settingsPane)
+                        editor: window.editor
+                        y: settingsButton.height + 6
+                        x: settingsButton.width - width
+                    }
+                }
+                AppButton {
                     iconName: "scissors"
                     text: "Edit"
                     checked: window.editMode // not checkable, so a click can't break the binding
@@ -755,7 +771,7 @@ ApplicationWindow {
 
             MouseArea {
                 anchors.fill: parent
-                enabled: window.editor.hasMedia
+                enabled: window.editor.hasMedia && window.editor.clickControls
                 onPressed: mouse => {
                     // 0: toggle; 1/2: a double-click on an edge undoes the first click's toggle and seeks.
                     const action = window.editor.videoClick(mouse.x / width)

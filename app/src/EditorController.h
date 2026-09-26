@@ -58,6 +58,8 @@ class EditorController : public QObject
     Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
     Q_PROPERTY(bool alwaysOnTop READ alwaysOnTop WRITE setAlwaysOnTop NOTIFY alwaysOnTopChanged)
+    // Click to play/pause, double-click an edge to seek; off leaves clicks on the video alone.
+    Q_PROPERTY(bool clickControls READ clickControls WRITE setClickControls NOTIFY clickControlsChanged)
     Q_PROPERTY(bool exporting READ exporting NOTIFY exportingChanged)
     Q_PROPERTY(double exportProgress READ exportProgress NOTIFY exportProgressChanged)
     Q_PROPERTY(QString status READ status NOTIFY statusChanged)
@@ -101,6 +103,8 @@ public:
     void setTheme(const QString &name);
     bool alwaysOnTop() const { return m_settings.alwaysOnTop; }
     void setAlwaysOnTop(bool value);
+    bool clickControls() const { return m_settings.clickControls; }
+    void setClickControls(bool value);
     bool exporting() const { return m_exporting; }
     double exportProgress() const { return m_exportProgress; }
     QString status() const { return m_status; }
@@ -172,6 +176,7 @@ signals:
     void mutedChanged();
     void themeChanged();
     void alwaysOnTopChanged();
+    void clickControlsChanged();
     void exportingChanged();
     void exportProgressChanged();
     void statusChanged();

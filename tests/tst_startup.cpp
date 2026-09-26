@@ -119,6 +119,7 @@ private slots:
         settings.lastFrameFolder = "D:/frames";
         settings.theme = "paper";
         settings.alwaysOnTop = true;
+        settings.clickControls = false;
         settings.subtitles.size = 130;
         QVERIFY(settings.save(path));
 
@@ -130,6 +131,7 @@ private slots:
         QCOMPARE(json.value("reencode").toObject().value("maxHeight").toInt(), 720);
         QCOMPARE(json.value("theme").toString(), QString("paper"));
         QCOMPARE(json.value("alwaysOnTop").toBool(), true);
+        QCOMPARE(json.value("clickControls").toBool(true), false);
         QCOMPARE(json.value("subtitles").toObject().value("size").toInt(), 130);
         QCOMPARE(AppSettings::load(path), settings);
     }
@@ -137,12 +139,13 @@ private slots:
     void settings_invalidValues_fallBack()
     {
         QTemporaryDir dir;
-        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\", \"theme\": 3, \"alwaysOnTop\": 1 }");
+        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\", \"theme\": 3, \"alwaysOnTop\": 1, \"clickControls\": 0 }");
         const AppSettings settings = AppSettings::load(dir.filePath("s.json"));
         QCOMPARE(settings.volume, 1.0);
         QCOMPARE(settings.muted, false);
         QCOMPARE(settings.theme, QString("graphite"));
         QCOMPARE(settings.alwaysOnTop, false);
+        QCOMPARE(settings.clickControls, true);
     }
 
     void settings_garbage_givesDefaults()

@@ -26,6 +26,8 @@ struct AppSettings
     QString theme = QStringLiteral("graphite");
     // Keeps the window above other windows.
     bool alwaysOnTop = false;
+    // Clicking the video plays/pauses, a double-click on an edge seeks (PlayerClickGesture).
+    bool clickControls = true;
     // Subtitle size, background and position.
     SubtitleStyle subtitles;
 
