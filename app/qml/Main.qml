@@ -588,6 +588,18 @@ ApplicationWindow {
                             Repeater { model: Theme.darkNames; delegate: themeItem }
                             Rectangle { width: parent.width; height: 1; color: Theme.border }
                             Repeater { model: Theme.lightNames; delegate: themeItem }
+                            Rectangle { width: parent.width; height: 1; color: Theme.border }
+                            AppButton {
+                                width: 160
+                                quiet: true
+                                iconName: "open"
+                                text: "Open log folder"
+                                toolTip: "Logs and crash reports, to attach to a bug report"
+                                onClicked: {
+                                    themeMenu.close()
+                                    window.editor.openLogFolder()
+                                }
+                            }
                         }
                     }
                 }
@@ -1433,11 +1445,14 @@ ApplicationWindow {
 
         // ---- Status bar: only while there's a message or an export ----
         Rectangle {
+            id: statusBar
             Layout.fillWidth: true
+            readonly property bool warning: !window.editor.ffmpegFound || window.editor.crashNotice
             visible: window.editor.exporting
-                || (!window.fullScreen && !window.controlsHidden && window.editor.status.length > 0)
+                || (!window.fullScreen && !window.controlsHidden
+                    && (window.editor.status.length > 0 || window.editor.crashNotice))
             implicitHeight: 34
-            color: window.editor.ffmpegFound ? Theme.chrome : Theme.warningSoft
+            color: warning ? Theme.warningSoft : Theme.chrome
 
             Rectangle { width: parent.width; height: 1; color: Theme.border }
 
@@ -1451,8 +1466,10 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     text: window.editor.exporting
                         ? "Exporting… " + Math.round(window.editor.exportProgress * 100) + "%"
-                        : window.editor.status
-                    color: window.editor.ffmpegFound ? Theme.text2 : Theme.warning
+                        : window.editor.crashNotice
+                            ? "ClipViewer crashed last time. The log folder has a crash report to attach to a bug report."
+                            : window.editor.status
+                    color: statusBar.warning ? Theme.warning : Theme.text2
                     elide: Text.ElideRight
                 }
 
@@ -1480,14 +1497,22 @@ ApplicationWindow {
                     implicitHeight: 26
                     onClicked: window.editor.cancelExport()
                 }
+                AppButton {
+                    visible: !window.editor.exporting && window.editor.crashNotice
+                    quiet: true
+                    iconName: "open"
+                    text: "Open log folder"
+                    implicitHeight: 26
+                    onClicked: window.editor.openLogFolder()
+                }
                 // The missing-FFmpeg warning stays; other messages can be dismissed
                 AppButton {
-                    visible: !window.editor.exporting && window.editor.ffmpegFound
+                    visible: !window.editor.exporting && (window.editor.ffmpegFound || window.editor.crashNotice)
                     quiet: true
                     iconName: "close"
                     toolTip: "Dismiss"
                     implicitHeight: 26
-                    onClicked: window.editor.clearStatus()
+                    onClicked: window.editor.crashNotice ? window.editor.dismissCrashNotice() : window.editor.clearStatus()
                 }
             }
         }

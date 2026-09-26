@@ -3,12 +3,14 @@
 #include "Background.h"
 #include "StillFrameProvider.h"
 #include "TimeFormat.h"
+#include "diagnostics/Log.h"
 #include "media/FrameGrabber.h"
 #include "media/MediaDetails.h"
 #include "media/MediaProbe.h"
 
 #include <QClipboard>
 #include <QCoreApplication>
+#include <QDesktopServices>
 #include <QGuiApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -37,6 +39,10 @@ EditorController::EditorController(StillFrameProvider *stills, StillFrameProvide
     m_settingsSave.setSingleShot(true);
     m_settingsSave.setInterval(500);
     connect(&m_settingsSave, &QTimer::timeout, this, &EditorController::writeSettings);
+    if (m_paths)
+        qInfo("FFmpeg: %s", qUtf8Printable(QDir::toNativeSeparators(m_paths->ffmpeg)));
+    else
+        qWarning("FFmpeg wasn't found");
     if (!m_paths)
         m_status = QStringLiteral("FFmpeg wasn't found. Install it (e.g. winget install Gyan.FFmpeg) or set %1.")
                        .arg(QLatin1String(cv::FfmpegPaths::DirectoryEnvVar));
@@ -212,7 +218,28 @@ void EditorController::setStatus(const QString &status)
     if (m_status == status)
         return;
     m_status = status;
+    if (!status.isEmpty())
+        qInfo("Status: %s", qUtf8Printable(status));
     emit statusChanged();
+}
+
+void EditorController::showCrashNotice()
+{
+    m_crashNotice = true;
+    emit crashNoticeChanged();
+}
+
+void EditorController::dismissCrashNotice()
+{
+    m_crashNotice = false;
+    emit crashNoticeChanged();
+}
+
+void EditorController::openLogFolder() const
+{
+    const QString dir = cv::Log::defaultDir();
+    QDir().mkpath(dir);
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
 }
 
 // ---- Opening ----
@@ -230,6 +257,7 @@ void EditorController::openFile(const QString &pathOrUrl)
         return;
     }
 
+    qInfo("Opening %s", qUtf8Printable(QDir::toNativeSeparators(path)));
     const quint64 generation = ++m_openGeneration;
     m_loading = true;
     emit loadingChanged();
@@ -246,6 +274,7 @@ void EditorController::openFile(const QString &pathOrUrl)
             try {
                 return {cv::MediaProbe(paths).probe(path), {}};
             } catch (const std::exception &e) {
+                qWarning("Probing failed: %s", e.what());
                 return {std::nullopt, firstLine(e.what())};
             }
         },
@@ -259,6 +288,7 @@ void EditorController::openFile(const QString &pathOrUrl)
                 return;
             }
             m_info = std::move(result.info);
+            qInfo("Opened: %s", qUtf8Printable(infoText()));
             m_trimStart = 0;
             m_trimEnd = m_info->duration;
             clearStill();
@@ -451,6 +481,7 @@ void EditorController::saveFrame(double seconds, const QUrl &destination)
                     return file.errorString().isEmpty() ? QStringLiteral("couldn't write the file") : file.errorString();
                 return {};
             } catch (const std::exception &e) {
+                qWarning("Saving a frame failed: %s", e.what());
                 return firstLine(e.what());
             }
         },
@@ -576,6 +607,9 @@ void EditorController::exportTo(const QUrl &destination)
     cv::ExportRequest request{m_info->path, output, m_trimStart, m_trimEnd,
                               m_settings.smartCut ? cv::ExportMode::SmartCut : cv::ExportMode::Reencode,
                               m_settings.reencode};
+    qInfo("Exporting %s to %s (%s, %s)", qUtf8Printable(cv::TimeFormat::format(m_trimStart)),
+          qUtf8Printable(cv::TimeFormat::format(m_trimEnd)), qUtf8Printable(QDir::toNativeSeparators(output)),
+          m_settings.smartCut ? "smart cut" : "re-encode");
     m_exportCancel = cv::CancelToken();
     m_exporting = true;
     m_exportProgress = 0;
@@ -614,6 +648,7 @@ void EditorController::exportTo(const QUrl &destination)
             } catch (const cv::OperationCancelled &) {
                 return {false, true, {}, 0};
             } catch (const std::exception &e) {
+                qWarning("Export failed: %s", e.what());
                 return {false, false, firstLine(e.what()), 0};
             }
         },

@@ -9,6 +9,10 @@ add_library(cvcore STATIC
     src/StartupArgs.h
     src/TimeFormat.cpp
     src/TimeFormat.h
+    src/diagnostics/CrashHandler.cpp
+    src/diagnostics/CrashHandler.h
+    src/diagnostics/Log.cpp
+    src/diagnostics/Log.h
     src/media/ClipExporter.cpp
     src/media/ClipExporter.h
     src/media/FfmpegPaths.cpp
@@ -42,3 +46,8 @@ add_library(cvcore STATIC
 target_include_directories(cvcore PUBLIC src)
 # Gui only for QImage (FrameGrabber decodes the still frame).
 target_link_libraries(cvcore PUBLIC Qt6::Core Qt6::Gui)
+
+# The crash handler's stack symbols and minidumps.
+if(WIN32)
+    target_link_libraries(cvcore PRIVATE dbghelp)
+endif()

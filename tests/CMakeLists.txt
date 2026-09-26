@@ -8,6 +8,7 @@ add_cv_test(tst_timeformat)
 add_cv_test(tst_startup)
 add_cv_test(tst_clipexporter)
 add_cv_test(tst_subtitles)
+add_cv_test(tst_log)
 
 # Generates sample clips with ffmpeg's lavfi sources; skips itself when ffmpeg isn't found.
 add_cv_test(tst_ffmpegintegration)

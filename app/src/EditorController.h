@@ -61,6 +61,7 @@ class EditorController : public QObject
     Q_PROPERTY(bool exporting READ exporting NOTIFY exportingChanged)
     Q_PROPERTY(double exportProgress READ exportProgress NOTIFY exportProgressChanged)
     Q_PROPERTY(QString status READ status NOTIFY statusChanged)
+    Q_PROPERTY(bool crashNotice READ crashNotice NOTIFY crashNoticeChanged)
     Q_PROPERTY(QUrl stillSource READ stillSource NOTIFY stillChanged)
     Q_PROPERTY(QUrl thumbnailSource READ thumbnailSource NOTIFY thumbnailChanged)
     Q_PROPERTY(SubtitleController *subtitles READ subtitles CONSTANT)
@@ -143,6 +144,12 @@ public:
     // Copies the media info panel's text.
     Q_INVOKABLE void copyMediaDetails() const;
     Q_INVOKABLE void clearStatus() { setStatus({}); }
+    // "The app crashed last time", shown in the status bar until dismissed.
+    bool crashNotice() const { return m_crashNotice; }
+    void showCrashNotice();
+    Q_INVOKABLE void dismissCrashNotice();
+    // Opens the folder with the log files and crash dumps in the file manager.
+    Q_INVOKABLE void openLogFolder() const;
     // MediaPlayer.onErrorOccurred: shows the player's message in the status bar.
     Q_INVOKABLE void reportPlaybackError(const QString &message);
     // Sets one re-encode setting; a value that isn't one of its choices falls back to the default.
@@ -168,6 +175,7 @@ signals:
     void exportingChanged();
     void exportProgressChanged();
     void statusChanged();
+    void crashNoticeChanged();
     void stillChanged();
     void thumbnailChanged();
 
@@ -196,6 +204,7 @@ private:
     double m_exportProgress = 0;
     cv::CancelToken m_exportCancel;
     QString m_status;
+    bool m_crashNotice = false;
     QUrl m_stillSource;
     quint64 m_stillGeneration = 0;
     cv::CancelToken m_stillCancel;

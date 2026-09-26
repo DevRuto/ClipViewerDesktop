@@ -62,6 +62,10 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
   - `PlayerClickGesture`: click to play/pause, double-click an edge to seek.
   - `AppSettings`: `settings.json` in `%LOCALAPPDATA%\ClipViewerDesktop`. Unknown keys survive
     saving.
+  - `diagnostics/`: `Log` (every Qt message also goes to `logs\app.log`, the last 4 runs kept) and
+    `CrashHandler` (a crash, abort, qFatal or uncaught exception appends a stack trace to the log,
+    plus a minidump on Windows; the next start shows a notice). Log errors with `qWarning`, with
+    the full ffmpeg message, since the status bar only shows the first line.
   - `media/`: `Process` (`runProcess`/`runTool`, `CancelToken`, error types), `FfmpegPaths`,
     `MediaProbe`, `MediaDetails`, `FrameGrabber`, `SmartCutPlan`, `ReencodeOptions`, `ClipExporter`
     and `SubtitleExtractor`.
