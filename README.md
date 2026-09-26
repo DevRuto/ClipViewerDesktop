@@ -16,6 +16,9 @@ Export and still frames use FFmpeg, run as an external program.
 
 </details>
 
+More in [Screenshots](docs/SCREENSHOTS.md): every palette in dark and light, the Material,
+Fluent and Adwaita styles, compact mode, and the player with the controls hidden.
+
 It's built for Windows, Linux and macOS, but only Windows has been tested.
 
 > **Note:** Linux and macOS haven't been tested. CI builds the project on Linux and runs the
