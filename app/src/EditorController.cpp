@@ -237,10 +237,22 @@ void EditorController::openFile(const QString &pathOrUrl)
             clearStill();
             clearThumbnail();
             m_thumbnailCache.clear();
+            // Before mediaChanged, so a playback error for the new source isn't cleared
+            setStatus({});
             emit mediaChanged();
             emit trimChanged();
-            setStatus({});
         });
+}
+
+void EditorController::reportPlaybackError(const QString &message)
+{
+    qWarning("Playback error: %s", qPrintable(message));
+    const QString name = fileName();
+    QString reason = message.trimmed().section(QLatin1Char('\n'), 0, 0).trimmed();
+    if (reason.isEmpty())
+        reason = QStringLiteral("unknown error");
+    setStatus(name.isEmpty() ? QStringLiteral("Playback error: %1").arg(reason)
+                             : QStringLiteral("Can't play %1: %2").arg(name, reason));
 }
 
 // ---- Trim range ----

@@ -118,6 +118,8 @@ public:
     Q_INVOKABLE void exportTo(const QUrl &destination);
     Q_INVOKABLE void cancelExport();
     Q_INVOKABLE void clearStatus() { setStatus({}); }
+    // MediaPlayer.onErrorOccurred: shows the player's message in the status bar.
+    Q_INVOKABLE void reportPlaybackError(const QString &message);
     // Sets one re-encode setting; a value that isn't one of its choices falls back to the default.
     Q_INVOKABLE void setReencodeOption(const QString &key, const QVariant &value);
     Q_INVOKABLE void resetReencode();

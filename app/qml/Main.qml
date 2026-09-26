@@ -220,7 +220,7 @@ ApplicationWindow {
                 window.seekTo(window.editor.duration - window.editor.frameDuration)
             }
         }
-        onErrorOccurred: (error, errorString) => console.warn("Playback error:", errorString)
+        onErrorOccurred: (error, errorString) => window.editor.reportPlaybackError(errorString)
     }
 
     FileDialog {
