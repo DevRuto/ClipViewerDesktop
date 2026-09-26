@@ -33,6 +33,8 @@ add_library(cvcore STATIC
     src/subtitles/DvdSubtitle.h
     src/subtitles/SrtParser.cpp
     src/subtitles/SrtParser.h
+    src/subtitles/SubtitleStyle.cpp
+    src/subtitles/SubtitleStyle.h
     src/subtitles/SubtitleTrack.cpp
     src/subtitles/SubtitleTrack.h
 )

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "media/ReencodeOptions.h"
+#include "subtitles/SubtitleStyle.h"
 
 #include <QJsonObject>
 #include <QString>
@@ -25,6 +26,8 @@ struct AppSettings
     QString theme = QStringLiteral("graphite");
     // Keeps the window above other windows.
     bool alwaysOnTop = false;
+    // Subtitle size, background and position.
+    SubtitleStyle subtitles;
 
     // %LOCALAPPDATA%\ClipViewerDesktop\settings.json on Windows.
     static QString defaultPath();

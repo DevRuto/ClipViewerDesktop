@@ -137,6 +137,27 @@ void EditorController::setReencode(const cv::ReencodeOptions &options)
     emit reencodeChanged();
 }
 
+void EditorController::setSubtitleStyleOption(const QString &key, const QVariant &value)
+{
+    QJsonObject json = m_settings.subtitles.toJson();
+    json.insert(key, QJsonValue::fromVariant(value));
+    setSubtitleStyle(cv::SubtitleStyle::fromJson(json));
+}
+
+void EditorController::resetSubtitleStyle()
+{
+    setSubtitleStyle({});
+}
+
+void EditorController::setSubtitleStyle(const cv::SubtitleStyle &style)
+{
+    if (m_settings.subtitles == style)
+        return;
+    m_settings.subtitles = style;
+    saveSettings();
+    emit subtitleStyleChanged();
+}
+
 void EditorController::setVolume(double value)
 {
     value = std::clamp(value, 0.0, 1.0);

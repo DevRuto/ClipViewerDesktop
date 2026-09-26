@@ -65,8 +65,8 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
   - `media/`: `Process` (`runProcess`/`runTool`, `CancelToken`, error types), `FfmpegPaths`,
     `MediaProbe`, `MediaDetails`, `FrameGrabber`, `SmartCutPlan`, `ReencodeOptions`, `ClipExporter`
     and `SubtitleExtractor`.
-  - `subtitles/`: `SubtitleTrack` (cues, lookup by time), `SrtParser` and `DvdSubtitle` (the DVD
-    subpicture decoder).
+  - `subtitles/`: `SubtitleTrack` (cues, lookup by time), `SrtParser`, `DvdSubtitle` (the DVD
+    subpicture decoder) and `SubtitleStyle`.
 - `app/`: the executable (`ClipViewerDesktop.exe`), a QML module with URI `ClipViewer`.
   - `src/EditorController`: all player/editor state and commands exposed to QML (`QML_ELEMENT`,
     passed in as the `editor` required property). `src/StillFrameProvider`: serves the paused
@@ -75,7 +75,7 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
     `src/Background.h`: `runInBackground`. `src/main.cpp`: fonts, style, startup.
   - `qml/Main.qml`: the window, which owns playback (`MediaPlayer`), the shortcuts and the layout.
     `TrimTimeline.qml`, `TimeField.qml`, `AppButton.qml`, `SegmentedControl.qml`,
-    `ReencodeSettings.qml`, `Icon.qml`, `Theme.qml`.
+    `ReencodeSettings.qml`, `SubtitleSettings.qml`, `Icon.qml`, `Theme.qml`.
   - `assets/`: fonts and icons.
 - `tests/`: one Qt Test executable per `tst_*.cpp`. `tst_ffmpegintegration` generates sample
   clips with ffmpeg's `lavfi` sources and checks real exports frame by frame (framemd5). It
@@ -177,6 +177,9 @@ are MPEG-TS files in a hidden `.<name>.parts-<guid>` folder next to the output, 
 - `<video>.srt` (and `<video>.*.srt`/`.ass`/`.ssa`/`.vtt`) next to the video is listed and the
   first one turned on. Files can also be loaded from the menu or dropped on the window.
 - Blu-ray PGS isn't decoded yet; its tracks are listed but disabled.
+- Subtitle settings (`SubtitleSettings.qml`, from the tracks menu): size, background (box or
+  outline) and position are saved (`cv::SubtitleStyle`); the timing offset (G / H, 0.1 s steps)
+  is per video. Size and position also apply to DVD pictures.
 
 ## Qt pitfalls hit so far
 

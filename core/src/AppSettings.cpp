@@ -21,6 +21,7 @@ const QString LastExportFolder = QStringLiteral("lastExportFolder");
 const QString LastFrameFolder = QStringLiteral("lastFrameFolder");
 const QString Theme = QStringLiteral("theme");
 const QString AlwaysOnTop = QStringLiteral("alwaysOnTop");
+const QString Subtitles = QStringLiteral("subtitles");
 
 } // namespace
 
@@ -50,6 +51,7 @@ AppSettings AppSettings::load(const QString &path)
     settings.lastFrameFolder = json.take(LastFrameFolder).toString();
     settings.theme = json.take(Theme).toString(settings.theme);
     settings.alwaysOnTop = json.take(AlwaysOnTop).toBool(settings.alwaysOnTop);
+    settings.subtitles = SubtitleStyle::fromJson(json.take(Subtitles).toObject());
     settings.m_unknown = json;
     return settings;
 }
@@ -65,6 +67,7 @@ bool AppSettings::save(const QString &path) const
     json[LastFrameFolder] = lastFrameFolder;
     json[Theme] = theme;
     json[AlwaysOnTop] = alwaysOnTop;
+    json[Subtitles] = subtitles.toJson();
 
     QDir().mkpath(QFileInfo(path).absolutePath());
     QSaveFile file(path);
@@ -79,7 +82,7 @@ bool AppSettings::operator==(const AppSettings &other) const
     return volume == other.volume && muted == other.muted && smartCut == other.smartCut
         && reencode == other.reencode && lastExportFolder == other.lastExportFolder
         && lastFrameFolder == other.lastFrameFolder && theme == other.theme
-        && alwaysOnTop == other.alwaysOnTop
+        && alwaysOnTop == other.alwaysOnTop && subtitles == other.subtitles
         && m_unknown == other.m_unknown;
 }
 

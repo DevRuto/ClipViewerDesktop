@@ -42,6 +42,7 @@ qt_add_qml_module(ClipViewerDesktop
         qml/Main.qml
         qml/ReencodeSettings.qml
         qml/SegmentedControl.qml
+        qml/SubtitleSettings.qml
         qml/Theme.qml
         qml/TimeField.qml
         qml/TrimTimeline.qml

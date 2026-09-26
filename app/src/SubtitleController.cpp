@@ -8,6 +8,9 @@
 #include <QFileInfo>
 #include <QLocale>
 
+#include <algorithm>
+#include <cmath>
+
 namespace {
 
 // "eng" -> "English"; an unknown code is shown as it is.
@@ -61,6 +64,7 @@ void SubtitleController::setMedia(const std::optional<cv::FfmpegPaths> &paths, c
     m_loadingTrack = -1;
     m_active = -1;
     m_position = 0;
+    setDelay(0);
     clearCue();
 
     int firstFile = -1;
@@ -234,13 +238,25 @@ void SubtitleController::setPosition(double seconds)
 {
     m_position = seconds;
     const cv::SubtitleTrack *track = m_active >= 0 && m_tracks[m_active].data ? &*m_tracks[m_active].data : nullptr;
-    const int cue = track ? track->cueAt(seconds) : -1;
+    const int cue = track ? track->cueAt(seconds - m_delay) : -1;
     if (cue == m_cue)
         return;
     if (cue < 0)
         clearCue();
     else
         showCue(cue);
+}
+
+void SubtitleController::setDelay(double seconds)
+{
+    if (!std::isfinite(seconds))
+        return;
+    seconds = std::clamp(std::round(seconds * 10) / 10, -60.0, 60.0);
+    if (seconds == m_delay)
+        return;
+    m_delay = seconds;
+    emit delayChanged();
+    setPosition(m_position);
 }
 
 void SubtitleController::showCue(int index)

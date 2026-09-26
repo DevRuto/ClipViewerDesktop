@@ -119,6 +119,7 @@ private slots:
         settings.lastFrameFolder = "D:/frames";
         settings.theme = "paper";
         settings.alwaysOnTop = true;
+        settings.subtitles.size = 130;
         QVERIFY(settings.save(path));
 
         QFile file(path);
@@ -129,6 +130,7 @@ private slots:
         QCOMPARE(json.value("reencode").toObject().value("maxHeight").toInt(), 720);
         QCOMPARE(json.value("theme").toString(), QString("paper"));
         QCOMPARE(json.value("alwaysOnTop").toBool(), true);
+        QCOMPARE(json.value("subtitles").toObject().value("size").toInt(), 130);
         QCOMPARE(AppSettings::load(path), settings);
     }
 

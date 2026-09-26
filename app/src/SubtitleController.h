@@ -34,6 +34,9 @@ class SubtitleController : public QObject
     Q_PROPERTY(QString cueText READ cueText NOTIFY cueChanged)
     Q_PROPERTY(QUrl cueImage READ cueImage NOTIFY cueChanged)
     Q_PROPERTY(QRectF cueRect READ cueRect NOTIFY cueChanged)
+    // Seconds the subtitles are shown later (negative: earlier), for a file that's out of sync.
+    // Per video: opening another resets it.
+    Q_PROPERTY(double delay READ delay WRITE setDelay NOTIFY delayChanged)
 
 public:
     SubtitleController(StillFrameProvider *pictures, QObject *parent = nullptr);
@@ -45,6 +48,9 @@ public:
     QString cueText() const { return m_cueText; }
     QUrl cueImage() const { return m_cueImage; }
     QRectF cueRect() const { return m_cueRect; }
+    double delay() const { return m_delay; }
+    // Rounded to 0.1 s and kept within a minute either way.
+    void setDelay(double seconds);
 
     // A new video: lists its subtitle streams and sidecar files, and turns on the first sidecar
     // ("<name>.srt"). nullptr clears everything.
@@ -65,6 +71,7 @@ signals:
     void activeTrackChanged();
     void loadingChanged();
     void cueChanged();
+    void delayChanged();
     // For the status bar: a track that couldn't be read, or had no subtitles.
     void message(const QString &text);
 
@@ -93,6 +100,7 @@ private:
     quint64 m_generation = 0; // bumped when the video changes, so late results are dropped
     cv::CancelToken m_loadCancel;
     double m_position = 0;
+    double m_delay = 0;
     int m_cue = -1;
     QString m_cueText;
     QUrl m_cueImage;

@@ -4,6 +4,7 @@
 #include "media/SubtitleExtractor.h"
 #include "subtitles/DvdSubtitle.h"
 #include "subtitles/SrtParser.h"
+#include "subtitles/SubtitleStyle.h"
 
 #include <QFile>
 #include <QJsonArray>
@@ -299,6 +300,21 @@ private slots:
         for (const QString &path : SubtitleExtractor::sidecarFiles(dir.filePath("movie.mp4")))
             names << QFileInfo(path).fileName();
         QCOMPARE(names, (QStringList{"movie.srt", "movie.ass", "Movie.en.srt"}));
+    }
+
+    void style_onlyListedChoicesSurvive()
+    {
+        const SubtitleStyle style = SubtitleStyle::fromJson(
+            QJsonObject{{"size", 160}, {"background", "outline"}, {"position", 20}});
+        QCOMPARE(style.size, 160);
+        QCOMPARE(style.background, "outline");
+        QCOMPARE(style.position, 20);
+        QCOMPARE(SubtitleStyle::fromJson(style.toJson()), style);
+
+        const SubtitleStyle junk = SubtitleStyle::fromJson(
+            QJsonObject{{"size", 999}, {"background", "neon"}, {"position", 12.5}});
+        QCOMPARE(junk, SubtitleStyle{});
+        QCOMPARE(SubtitleStyle::fromJson({}), SubtitleStyle{});
     }
 
     void subtitleFormats()

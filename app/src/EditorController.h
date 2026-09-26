@@ -51,6 +51,9 @@ class EditorController : public QObject
     // The re-encode settings as { crf, preset, maxHeight, maxFrameRate, audioBitrate }; see cv::ReencodeOptions.
     Q_PROPERTY(QVariantMap reencode READ reencode NOTIFY reencodeChanged)
     Q_PROPERTY(bool reencodeIsDefault READ reencodeIsDefault NOTIFY reencodeChanged)
+    // The subtitle settings as { size, background, position }; see cv::SubtitleStyle.
+    Q_PROPERTY(QVariantMap subtitleStyle READ subtitleStyle NOTIFY subtitleStyleChanged)
+    Q_PROPERTY(bool subtitleStyleIsDefault READ subtitleStyleIsDefault NOTIFY subtitleStyleChanged)
     Q_PROPERTY(double volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
@@ -87,6 +90,8 @@ public:
     void setSmartCut(bool value);
     QVariantMap reencode() const { return m_settings.reencode.toJson().toVariantMap(); }
     bool reencodeIsDefault() const { return m_settings.reencode == cv::ReencodeOptions{}; }
+    QVariantMap subtitleStyle() const { return m_settings.subtitles.toJson().toVariantMap(); }
+    bool subtitleStyleIsDefault() const { return m_settings.subtitles == cv::SubtitleStyle{}; }
     double volume() const { return m_settings.volume; }
     void setVolume(double value);
     bool muted() const { return m_settings.muted; }
@@ -143,6 +148,9 @@ public:
     // Sets one re-encode setting; a value that isn't one of its choices falls back to the default.
     Q_INVOKABLE void setReencodeOption(const QString &key, const QVariant &value);
     Q_INVOKABLE void resetReencode();
+    // Sets one subtitle setting; a value that isn't one of its choices falls back to the default.
+    Q_INVOKABLE void setSubtitleStyleOption(const QString &key, const QVariant &value);
+    Q_INVOKABLE void resetSubtitleStyle();
     // A MediaPlayer audio track as "Track 2 · English · Commentary".
     Q_INVOKABLE QString trackLabel(const QMediaMetaData &track, int index) const;
 
@@ -152,6 +160,7 @@ signals:
     void trimChanged();
     void smartCutChanged();
     void reencodeChanged();
+    void subtitleStyleChanged();
     void volumeChanged();
     void mutedChanged();
     void themeChanged();
@@ -165,6 +174,7 @@ signals:
 private:
     void setStatus(const QString &status);
     void setReencode(const cv::ReencodeOptions &options);
+    void setSubtitleStyle(const cv::SubtitleStyle &style);
     void setTrimRange(double start, double end);
     double minClip() const;
     void saveSettings(); // debounced

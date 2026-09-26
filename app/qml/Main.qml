@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Dialogs
+import QtQuick.Effects
 import QtQuick.Layouts
 import QtMultimedia
 import ClipViewer
@@ -370,6 +371,8 @@ ApplicationWindow {
     Shortcut { sequence: "]"; onActivated: window.stepPlaybackRate(1) }
     Shortcut { sequence: "B"; onActivated: window.cycleAudioTrack() }
     Shortcut { sequence: "V"; enabled: window.editor.hasMedia; onActivated: window.editor.subtitles.cycle() }
+    Shortcut { sequence: "G"; enabled: window.editor.hasMedia; onActivated: window.editor.subtitles.delay -= 0.1 }
+    Shortcut { sequence: "H"; enabled: window.editor.hasMedia; onActivated: window.editor.subtitles.delay += 0.1 }
     Shortcut { sequence: "A"; onActivated: window.videoAspect = window.cycle(window.videoAspects, window.videoAspect) }
     Shortcut { sequence: "Z"; onActivated: window.videoZoom = window.cycle(window.videoZooms, window.videoZoom) }
     Shortcut { sequence: "R"; onActivated: window.videoRotation = (window.videoRotation + 90) % 360 }
@@ -645,10 +648,14 @@ ApplicationWindow {
                 // zooms with the video.
                 Image {
                     readonly property rect cue: window.editor.subtitles.cueRect
+                    readonly property var style: window.editor.subtitleStyle
                     x: cue.x * parent.width
-                    y: cue.y * parent.height
+                    // Raised by the chosen position's difference from the default (5 %)
+                    y: (cue.y - (style.position - 5) / 100) * parent.height
                     width: cue.width * parent.width
                     height: cue.height * parent.height
+                    scale: style.size / 100
+                    transformOrigin: Item.Bottom
                     source: window.editor.subtitles.cueImage
                     visible: source.toString() !== ""
                     fillMode: Image.Stretch
@@ -670,11 +677,13 @@ ApplicationWindow {
             // whatever the palette, like subtitles on any player.
             Rectangle {
                 readonly property bool loadingCue: window.editor.subtitles.loadingTrack >= 0
+                readonly property var style: window.editor.subtitleStyle
+                readonly property bool outlined: !loadingCue && style.background === "outline"
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: (videoArea.height + videoArea.shownHeight) / 2 - videoArea.shownHeight * 0.05 - height
+                y: (videoArea.height + videoArea.shownHeight) / 2 - videoArea.shownHeight * style.position / 100 - height
                 width: Math.min(videoArea.shownWidth * 0.9, subtitleText.implicitWidth + 16)
                 height: subtitleText.implicitHeight + 8
-                color: Qt.rgba(0, 0, 0, 0.6)
+                color: outlined ? "transparent" : Qt.rgba(0, 0, 0, 0.6)
                 visible: window.editor.hasMedia && subtitleText.text !== ""
 
                 Text {
@@ -684,10 +693,51 @@ ApplicationWindow {
                     text: parent.loadingCue ? "Loading subtitles…" : window.editor.subtitles.cueText
                     textFormat: parent.loadingCue ? Text.PlainText : Text.StyledText
                     color: parent.loadingCue ? Qt.rgba(1, 1, 1, 0.7) : "white"
-                    font.pixelSize: parent.loadingCue ? 13 : Math.max(14, videoArea.shownHeight / 20)
+                    style: parent.outlined ? Text.Outline : Text.Normal
+                    styleColor: "black"
+                    // Qt's outline is a single pixel: a soft shadow keeps outlined text readable on bright scenes
+                    layer.enabled: parent.outlined
+                    layer.effect: MultiEffect {
+                        shadowEnabled: true
+                        shadowColor: "black"
+                        shadowBlur: 0.6
+                        shadowHorizontalOffset: 0
+                        shadowVerticalOffset: 1
+                    }
+                    font.pixelSize: parent.loadingCue ? 13
+                        : Math.max(12, videoArea.shownHeight / 20 * parent.style.size / 100)
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     wrapMode: Text.WordWrap
+                }
+            }
+
+            // "Subtitles 0.3 s later" for a moment after the timing changes (G / H)
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: 16
+                width: delayNote.implicitWidth + 24
+                height: delayNote.implicitHeight + 14
+                radius: 6
+                color: Qt.alpha(Theme.chrome, 0.85)
+                opacity: delayNoteTimer.running ? 1 : 0
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                Text {
+                    id: delayNote
+                    anchors.centerIn: parent
+                    readonly property double delay: window.editor.subtitles.delay
+                    text: delay === 0 ? "Subtitles in sync"
+                        : "Subtitles " + Math.abs(delay).toFixed(1) + " s " + (delay > 0 ? "later" : "earlier")
+                    color: Theme.text
+                    font.family: Theme.monoFont
+                }
+                Timer { id: delayNoteTimer; interval: 1500 }
+                Connections {
+                    target: window.editor.subtitles
+                    function onDelayChanged() { delayNoteTimer.restart() }
                 }
             }
 
@@ -984,8 +1034,21 @@ ApplicationWindow {
                                     text: "Load subtitle file…"
                                     onClicked: subtitleDialog.open()
                                 }
+                                TrackItem {
+                                    iconName: "sliders"
+                                    text: "Subtitle settings…"
+                                    onClicked: subtitleSettings.open()
+                                }
                             }
                         }
+                    }
+                    SubtitleSettings {
+                        id: subtitleSettings
+                        onAboutToShow: window.popupOpened(subtitleSettings)
+                        parent: tracksButton
+                        editor: window.editor
+                        x: tracksButton.width - width
+                        y: -height - 6
                     }
                     AppButton {
                         id: viewButton
