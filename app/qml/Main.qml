@@ -30,6 +30,9 @@ ApplicationWindow {
     property bool editMode: false
     // Ctrl+H: only the video is shown (an export's progress bar still appears)
     property bool controlsHidden: false
+    // Playback speed, one of playbackRates ([ and ] step through them)
+    readonly property var playbackRates: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
+    property real playbackRate: 1
 
     width: 1180
     height: 760
@@ -176,6 +179,20 @@ ApplicationWindow {
         editor.volume = Math.max(0, Math.min(1, editor.volume + delta))
     }
 
+    function setPlaybackRate(rate) {
+        playbackRate = playbackRates.indexOf(rate) >= 0 ? rate : 1
+        flashOsd()
+    }
+
+    function stepPlaybackRate(steps) {
+        const i = Math.max(0, playbackRates.indexOf(playbackRate))
+        setPlaybackRate(playbackRates[Math.max(0, Math.min(playbackRates.length - 1, i + steps))])
+    }
+
+    function formatRate(rate) {
+        return rate + "×"
+    }
+
     function showOpenDialog() {
         openDialog.open()
     }
@@ -191,6 +208,7 @@ ApplicationWindow {
         id: player
         source: window.editor.source
         videoOutput: videoOutput
+        playbackRate: window.playbackRate
         audioOutput: AudioOutput {
             volume: window.editor.volume
             muted: window.editor.muted
@@ -263,6 +281,8 @@ ApplicationWindow {
     Shortcut { sequence: "M"; onActivated: window.editor.muted = !window.editor.muted }
     Shortcut { sequence: "Up"; onActivated: window.changeVolume(0.05) }
     Shortcut { sequence: "Down"; onActivated: window.changeVolume(-0.05) }
+    Shortcut { sequence: "["; onActivated: window.stepPlaybackRate(-1) }
+    Shortcut { sequence: "]"; onActivated: window.stepPlaybackRate(1) }
     Shortcut { sequence: "F"; onActivated: window.toggleFullScreen() }
     Shortcut { sequence: "Ctrl+H"; onActivated: window.controlsHidden = !window.controlsHidden }
     Shortcut { sequence: "Esc"; enabled: window.fullScreen; onActivated: window.toggleFullScreen() }
@@ -469,6 +489,14 @@ ApplicationWindow {
                         font.family: Theme.monoFont
                         font.pixelSize: 16
                     }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: window.playbackRate !== 1
+                        text: window.formatRate(window.playbackRate)
+                        color: Theme.accentText
+                        font.family: Theme.monoFont
+                        font.pixelSize: 16
+                    }
                 }
             }
 
@@ -614,6 +642,47 @@ ApplicationWindow {
 
                     Item { Layout.fillWidth: true }
 
+                    AppButton {
+                        id: speedButton
+                        quiet: true
+                        text: window.formatRate(window.playbackRate)
+                        font.family: Theme.monoFont
+                        checked: speedMenu.visible || window.playbackRate !== 1
+                        toolTip: "Playback speed ([ / ])"
+                        onClicked: speedMenu.visible ? speedMenu.close() : speedMenu.open()
+
+                        Popup {
+                            id: speedMenu
+                            y: -height - 6
+                            x: (speedButton.width - width) / 2
+                            padding: 4
+                            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+                            background: Rectangle {
+                                radius: Theme.radius
+                                color: Theme.popup
+                                border.color: Theme.border
+                            }
+                            contentItem: Column {
+                                spacing: 2
+                                // Fastest at the top, like the list's position above the button
+                                Repeater {
+                                    model: window.playbackRates.slice().reverse()
+                                    delegate: AppButton {
+                                        required property real modelData
+                                        width: 72
+                                        quiet: true
+                                        text: window.formatRate(modelData)
+                                        font.family: Theme.monoFont
+                                        checked: window.playbackRate === modelData
+                                        onClicked: {
+                                            window.setPlaybackRate(modelData)
+                                            speedMenu.close()
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     AppButton {
                         quiet: true
                         iconName: window.editor.muted || window.editor.volume === 0 ? "muted" : "volume"
