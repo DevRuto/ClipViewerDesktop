@@ -6,6 +6,16 @@ All notable changes to ClipViewer are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-09-26
+
+### Changed
+
+- Hovering the timeline shows previews about three times faster on videos with far-apart
+  keyframes. The preview is now the keyframe at or before the mouse rather than the exact frame.
+- Going back to a paused frame you've just seen (stepping back, Home/End, the trim points) shows
+  it at once instead of decoding it again.
+- The README has new screenshots and a gallery of the palettes, styles and layouts.
+
 ## [0.7.1] - 2026-09-26
 
 ### Changed
@@ -145,7 +155,8 @@ First release.
 
 - The set-at-playhead buttons from the trim bar.
 
-[Unreleased]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/DevRuto/ClipViewerDesktop/compare/v0.6.0...v0.6.1
