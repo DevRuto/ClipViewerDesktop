@@ -1,7 +1,9 @@
 // Plays clips in each container/codec pair the app claims to support through Qt Multimedia (the
 // same backend the player uses) and checks that video frames and audio come out. The clips are
 // generated with ffmpeg's lavfi sources; the test skips itself when ffmpeg isn't found, and a row
-// skips when the local ffmpeg lacks its encoder.
+// skips when the local ffmpeg lacks its encoder. Qt's FFmpeg build has no software AV1 decoder
+// (no dav1d), so AV1 only plays with a hardware decoder; those rows skip on machines without one,
+// such as the CI runners.
 #include "media/FfmpegPaths.h"
 #include "media/Process.h"
 
@@ -53,22 +55,24 @@ private slots:
         QTest::addColumn<QString>("videoEncoder");
         QTest::addColumn<QString>("audioEncoder");
         QTest::addColumn<QStringList>("extraArgs");
+        QTest::addColumn<bool>("hardwareOnly");
 
-        QTest::newRow("mp4 h264") << "h264.mp4" << "libx264" << "aac" << QStringList{"-pix_fmt", "yuv420p"};
+        QTest::newRow("mp4 h264") << "h264.mp4" << "libx264" << "aac" << QStringList{"-pix_fmt", "yuv420p"} << false;
         QTest::newRow("mp4 hevc") << "hevc.mp4" << "libx265" << "aac"
-                                  << QStringList{"-pix_fmt", "yuv420p", "-tag:v", "hvc1", "-x265-params", "log-level=error"};
+                                  << QStringList{"-pix_fmt", "yuv420p", "-tag:v", "hvc1", "-x265-params", "log-level=error"}
+                                  << false;
         QTest::newRow("mp4 hevc 10-bit") << "hevc10.mp4" << "libx265" << "aac"
                                          << QStringList{"-pix_fmt", "yuv420p10le", "-tag:v", "hvc1", "-x265-params",
-                                                        "log-level=error"};
-        QTest::newRow("mov h264") << "h264.mov" << "libx264" << "aac" << QStringList{"-pix_fmt", "yuv420p"};
-        QTest::newRow("mkv h264") << "h264.mkv" << "libx264" << "aac" << QStringList{"-pix_fmt", "yuv420p"};
+                                                        "log-level=error"} << false;
+        QTest::newRow("mov h264") << "h264.mov" << "libx264" << "aac" << QStringList{"-pix_fmt", "yuv420p"} << false;
+        QTest::newRow("mkv h264") << "h264.mkv" << "libx264" << "aac" << QStringList{"-pix_fmt", "yuv420p"} << false;
         QTest::newRow("mkv hevc") << "hevc.mkv" << "libx265" << "libopus"
-                                  << QStringList{"-pix_fmt", "yuv420p", "-x265-params", "log-level=error"};
-        QTest::newRow("webm vp8") << "vp8.webm" << "libvpx" << "libvorbis" << QStringList{"-b:v", "500k"};
-        QTest::newRow("webm vp9") << "vp9.webm" << "libvpx-vp9" << "libopus" << QStringList{"-b:v", "500k"};
-        QTest::newRow("webm av1") << "av1.webm" << "libsvtav1" << "libopus" << QStringList{"-pix_fmt", "yuv420p"};
-        QTest::newRow("mp4 av1") << "av1.mp4" << "libsvtav1" << "aac" << QStringList{"-pix_fmt", "yuv420p"};
-        QTest::newRow("avi mpeg4") << "mpeg4.avi" << "mpeg4" << "libmp3lame" << QStringList{"-q:v", "4"};
+                                  << QStringList{"-pix_fmt", "yuv420p", "-x265-params", "log-level=error"} << false;
+        QTest::newRow("webm vp8") << "vp8.webm" << "libvpx" << "libvorbis" << QStringList{"-b:v", "500k"} << false;
+        QTest::newRow("webm vp9") << "vp9.webm" << "libvpx-vp9" << "libopus" << QStringList{"-b:v", "500k"} << false;
+        QTest::newRow("webm av1") << "av1.webm" << "libsvtav1" << "libopus" << QStringList{"-pix_fmt", "yuv420p"} << true;
+        QTest::newRow("mp4 av1") << "av1.mp4" << "libsvtav1" << "aac" << QStringList{"-pix_fmt", "yuv420p"} << true;
+        QTest::newRow("avi mpeg4") << "mpeg4.avi" << "mpeg4" << "libmp3lame" << QStringList{"-q:v", "4"} << false;
     }
 
     void plays()
@@ -77,6 +81,7 @@ private slots:
         QFETCH(QString, videoEncoder);
         QFETCH(QString, audioEncoder);
         QFETCH(QStringList, extraArgs);
+        QFETCH(bool, hardwareOnly);
 
         for (const QString &encoder : {videoEncoder, audioEncoder})
             if (!hasEncoder(encoder))
@@ -113,6 +118,8 @@ private slots:
 
         player.setSource(QUrl::fromLocalFile(path));
         QTRY_VERIFY_WITH_TIMEOUT(player.mediaStatus() == QMediaPlayer::LoadedMedia || !error.isEmpty(), 10000);
+        if (hardwareOnly && !error.isEmpty())
+            QSKIP(qPrintable(QStringLiteral("no hardware decoder for this codec: %1").arg(error)));
         QVERIFY2(error.isEmpty(), qPrintable(error));
         QVERIFY(player.hasVideo());
         QVERIFY(player.hasAudio());
@@ -121,6 +128,8 @@ private slots:
         player.play();
         QTRY_VERIFY_WITH_TIMEOUT(player.mediaStatus() == QMediaPlayer::EndOfMedia || !error.isEmpty(),
                                  Seconds * 1000 + 10000);
+        if (hardwareOnly && (!error.isEmpty() || frames == 0))
+            QSKIP("no hardware decoder for this codec");
         QVERIFY2(error.isEmpty(), qPrintable(error));
         QCOMPARE(frameSize, QSize(Width, Height));
         // Playback may drop a few frames under load, but most of the 30 fps must get through.
