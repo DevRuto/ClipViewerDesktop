@@ -260,6 +260,17 @@ private slots:
         QCOMPARE(FrameGrabber(paths()).grab(samplePath(), 1, 160).width(), 160);
     }
 
+    void grabKeyframe_returnsKeyframeBefore()
+    {
+        // Keyframes every second: 3.7 s lands on the one at 3 s
+        const FrameGrabber grabber(paths());
+        const QImage keyframe = grabber.grabKeyframe(samplePath(), 3.7, 0);
+        QVERIFY(!keyframe.isNull());
+        QCOMPARE(keyframe, grabber.grab(samplePath(), 3, 0));
+        QVERIFY(keyframe != grabber.grab(samplePath(), 3.7, 0));
+        QCOMPARE(grabber.grabKeyframe(samplePath(), 9.9, 160).width(), 160);
+    }
+
     void grabFrame_fullSize_keepsOddSize()
     {
         const QString odd = output("odd.mkv");

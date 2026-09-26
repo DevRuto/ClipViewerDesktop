@@ -18,7 +18,13 @@ public:
     // image if there is no frame there (e.g. past the end). Blocks; call from a worker thread.
     QImage grab(const QString &path, double seconds, int maxWidth = 1920, const CancelToken &cancel = {}) const;
 
+    // The keyframe at or before `seconds`: not exact, but it decodes one frame instead of up to a
+    // whole GOP, so it's for previews. Falls back to grab() if that finds nothing.
+    QImage grabKeyframe(const QString &path, double seconds, int maxWidth, const CancelToken &cancel = {}) const;
+
 private:
+    QImage run(const QString &path, double seconds, int maxWidth, bool keyframe, const CancelToken &cancel) const;
+
     FfmpegPaths m_paths;
 };
 

@@ -626,7 +626,7 @@ void EditorController::grabThumbnail(qint64 key)
         this,
         [paths = *m_paths, path = m_info->path, seconds, cancel = m_thumbnailCancel]() -> QImage {
             try {
-                return cv::FrameGrabber(paths).grab(path, seconds, 320, cancel);
+                return cv::FrameGrabber(paths).grabKeyframe(path, seconds, 320, cancel);
             } catch (const std::exception &) {
                 return {}; // cancelled, or no frame there
             }
