@@ -34,10 +34,12 @@ int main(int argc, char *argv[])
     // The editor outlives the engine, whose QML binds to it; the engine owns the image providers.
     auto *stills = new StillFrameProvider;
     auto *thumbnails = new StillFrameProvider;
-    EditorController editor(stills, thumbnails);
+    auto *subtitles = new StillFrameProvider;
+    EditorController editor(stills, thumbnails, subtitles);
     QQmlApplicationEngine engine;
     engine.addImageProvider(QStringLiteral("still"), stills);
     engine.addImageProvider(QStringLiteral("thumb"), thumbnails);
+    engine.addImageProvider(QStringLiteral("subtitle"), subtitles);
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app,
                      [] { QCoreApplication::exit(-1); }, Qt::QueuedConnection);

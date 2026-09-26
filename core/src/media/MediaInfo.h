@@ -5,6 +5,12 @@
 
 namespace cv {
 
+// How the app can show a subtitle stream: text (converted to SRT by ffmpeg) or DVD pictures
+// (decoded by DvdSubtitle). Blu-ray PGS and anything unknown can't be shown yet.
+enum class SubtitleFormat { Text, DvdPicture, Unsupported };
+
+SubtitleFormat subtitleFormat(const QString &codec);
+
 // One stream of a file as ffprobe reports it. Fields that don't apply to its type stay empty/0.
 struct StreamInfo
 {
@@ -60,15 +66,8 @@ struct MediaInfo
         return rotation % 180 == 0 ? aspect : 1 / aspect;
     }
 
-    // Whether the player can show its subtitle track `index` (in the player's order, which is
-    // the file's). Qt only draws text subtitles, and its FFmpeg backend crashes when a bitmap
-    // track (DVD, Blu-ray PGS, DVB) is turned on during playback. playerTrackCount is how many
-    // subtitle tracks the player lists; if that doesn't match the probe, a track is only
-    // allowed when every subtitle stream is text.
-    bool canShowSubtitleTrack(int index, int playerTrackCount) const;
-
-    // subrip, ass, mov_text, webvtt, …: subtitles stored as text, not pictures.
-    static bool isTextSubtitleCodec(const QString &codec);
+    // The subtitle streams, in file order (ffmpeg's 0:s:N numbering).
+    QList<StreamInfo> subtitleStreams() const;
 };
 
 } // namespace cv

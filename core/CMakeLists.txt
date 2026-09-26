@@ -27,6 +27,14 @@ add_library(cvcore STATIC
     src/media/ReencodeOptions.h
     src/media/SmartCutPlan.cpp
     src/media/SmartCutPlan.h
+    src/media/SubtitleExtractor.cpp
+    src/media/SubtitleExtractor.h
+    src/subtitles/DvdSubtitle.cpp
+    src/subtitles/DvdSubtitle.h
+    src/subtitles/SrtParser.cpp
+    src/subtitles/SrtParser.h
+    src/subtitles/SubtitleTrack.cpp
+    src/subtitles/SubtitleTrack.h
 )
 
 target_include_directories(cvcore PUBLIC src)

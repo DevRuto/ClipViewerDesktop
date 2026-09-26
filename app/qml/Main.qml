@@ -43,9 +43,8 @@ ApplicationWindow {
     property int videoRotation: 0
     readonly property bool viewIsDefault: videoAspect === 0 && videoZoom === 1 && videoRotation === 0
 
-    // The active audio and subtitle tracks (-1: none); see setAudioTrack
+    // The active audio track; see setAudioTrack. Subtitles are editor.subtitles, drawn by our overlay.
     property int audioTrack: 0
-    property int subtitleTrack: -1
 
     width: 1180
     height: 760
@@ -62,6 +61,8 @@ ApplicationWindow {
 
     // The palette follows the saved setting (Theme falls back to Graphite for an unknown name).
     Binding { target: Theme; property: "name"; value: window.editor.theme }
+
+    onPositionChanged: editor.subtitles.setPosition(position)
 
     // ---- Playback commands ----
 
@@ -228,35 +229,17 @@ ApplicationWindow {
         videoRotation = 0
     }
 
-    // Qt doesn't signal a change of the active tracks, so bindings use these copies.
+    // Qt doesn't signal a change of the active track, so bindings use this copy.
     function setAudioTrack(index) {
         player.activeAudioTrack = index
         audioTrack = player.activeAudioTrack
     }
 
-    function setSubtitleTrack(index) {
-        if (index >= 0 && !editor.canShowSubtitleTrack(index, player.subtitleTracks.length))
-            return // a bitmap track: Qt can't draw it and crashes trying
-        player.activeSubtitleTrack = index
-        subtitleTrack = player.activeSubtitleTrack
-    }
-
-    // B / V: the next audio track, and the next subtitle track (after the last one, subtitles off)
+    // B: the next audio track
     function cycleAudioTrack() {
         const count = player.audioTracks.length
         if (count > 1)
             setAudioTrack((audioTrack + 1) % count)
-    }
-
-    function cycleSubtitleTrack() {
-        const count = player.subtitleTracks.length
-        for (let next = subtitleTrack + 1; next < count; ++next) {
-            if (editor.canShowSubtitleTrack(next, count)) {
-                setSubtitleTrack(next)
-                return
-            }
-        }
-        setSubtitleTrack(-1)
     }
 
     function showOpenDialog() {
@@ -318,7 +301,10 @@ ApplicationWindow {
         }
         onTracksChanged: {
             window.audioTrack = activeAudioTrack
-            window.subtitleTrack = activeSubtitleTrack
+            // Our overlay draws the subtitles. Qt's stay off: it only draws text, only while
+            // playing, and crashes on DVD picture subtitles.
+            if (activeSubtitleTrack >= 0)
+                activeSubtitleTrack = -1
         }
         onErrorOccurred: (error, errorString) => window.editor.reportPlaybackError(errorString)
     }
@@ -337,6 +323,13 @@ ApplicationWindow {
         defaultSuffix: "mp4"
         nameFilters: ["MP4 video (*.mp4)"]
         onAccepted: window.editor.exportTo(selectedFile)
+    }
+
+    FileDialog {
+        id: subtitleDialog
+        title: "Load subtitles"
+        nameFilters: ["Subtitles (*.srt *.ass *.ssa *.vtt)", "All files (*)"]
+        onAccepted: window.editor.subtitles.loadFile(selectedFile)
     }
 
     FileDialog {
@@ -376,7 +369,7 @@ ApplicationWindow {
     Shortcut { sequence: "["; onActivated: window.stepPlaybackRate(-1) }
     Shortcut { sequence: "]"; onActivated: window.stepPlaybackRate(1) }
     Shortcut { sequence: "B"; onActivated: window.cycleAudioTrack() }
-    Shortcut { sequence: "V"; onActivated: window.cycleSubtitleTrack() }
+    Shortcut { sequence: "V"; enabled: window.editor.hasMedia; onActivated: window.editor.subtitles.cycle() }
     Shortcut { sequence: "A"; onActivated: window.videoAspect = window.cycle(window.videoAspects, window.videoAspect) }
     Shortcut { sequence: "Z"; onActivated: window.videoZoom = window.cycle(window.videoZooms, window.videoZoom) }
     Shortcut { sequence: "R"; onActivated: window.videoRotation = (window.videoRotation + 90) % 360 }
@@ -392,8 +385,14 @@ ApplicationWindow {
     DropArea {
         anchors.fill: parent
         onDropped: drop => {
-            if (drop.hasUrls)
-                window.editor.openFile(drop.urls[0])
+            if (!drop.hasUrls)
+                return
+            // A subtitle file goes with the open video; anything else is opened as a video
+            const url = drop.urls[0]
+            if (window.editor.hasMedia && window.editor.subtitles.isSubtitleFile(url))
+                window.editor.subtitles.loadFile(url)
+            else
+                window.editor.openFile(url)
         }
     }
 
@@ -641,34 +640,51 @@ ApplicationWindow {
                     asynchronous: false
                     smooth: true
                 }
+
+                // A picture subtitle (DVD), placed on the frame like the disc does, so it turns and
+                // zooms with the video.
+                Image {
+                    readonly property rect cue: window.editor.subtitles.cueRect
+                    x: cue.x * parent.width
+                    y: cue.y * parent.height
+                    width: cue.width * parent.width
+                    height: cue.height * parent.height
+                    source: window.editor.subtitles.cueImage
+                    visible: source.toString() !== ""
+                    fillMode: Image.Stretch
+                    cache: false
+                    smooth: true
+                }
             }
+
+            // The picture as shown (rotated and zoomed), within the area: text subtitles sit near its bottom.
+            readonly property real shownWidth: Math.min(width, (videoFrame.sideways ? videoFrame.height : videoFrame.width) * videoFrame.scale)
+            readonly property real shownHeight: Math.min(height, (videoFrame.sideways ? videoFrame.width : videoFrame.height) * videoFrame.scale)
 
             Connections {
                 target: videoOutput.videoSink
                 function onVideoFrameChanged() { window.scrubSeekDone() }
             }
 
-            // The still is decoded without subtitles, so while it covers the video the player's
-            // current cue is drawn over it. White on black like VideoOutput's own, whatever the palette.
-            // Qt only sets the cue while playing: after a paused seek into a cue it stays empty.
+            // A text subtitle, or "Loading subtitles…" while a track is read. White on black
+            // whatever the palette, like subtitles on any player.
             Rectangle {
+                readonly property bool loadingCue: window.editor.subtitles.loadingTrack >= 0
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: parent.height * 0.05
-                width: Math.min(parent.width * 0.9, pausedSubtitle.implicitWidth + 16)
-                height: pausedSubtitle.implicitHeight + 8
+                y: (videoArea.height + videoArea.shownHeight) / 2 - videoArea.shownHeight * 0.05 - height
+                width: Math.min(videoArea.shownWidth * 0.9, subtitleText.implicitWidth + 16)
+                height: subtitleText.implicitHeight + 8
                 color: Qt.rgba(0, 0, 0, 0.6)
-                visible: !window.playing && window.editor.hasMedia && window.subtitleTrack >= 0
-                    && pausedSubtitle.text !== ""
+                visible: window.editor.hasMedia && subtitleText.text !== ""
 
                 Text {
-                    id: pausedSubtitle
+                    id: subtitleText
                     anchors.fill: parent
                     anchors.margins: 4
-                    text: videoOutput.videoSink.subtitleText
-                    textFormat: Text.PlainText
-                    color: "white"
-                    font.pixelSize: Math.max(14, Math.min(videoArea.height, videoFrame.height) / 22)
+                    text: parent.loadingCue ? "Loading subtitles…" : window.editor.subtitles.cueText
+                    textFormat: parent.loadingCue ? Text.PlainText : Text.StyledText
+                    color: parent.loadingCue ? Qt.rgba(1, 1, 1, 0.7) : "white"
+                    font.pixelSize: parent.loadingCue ? 13 : Math.max(14, videoArea.shownHeight / 20)
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     wrapMode: Text.WordWrap
@@ -880,10 +896,8 @@ ApplicationWindow {
                         id: tracksButton
                         quiet: true
                         iconName: "captions"
-                        // Always there, so it can be found; the menu says when there's nothing to pick
-                        readonly property bool hasChoices: player.audioTracks.length > 1 || player.subtitleTracks.length > 0
                         enabled: window.editor.hasMedia
-                        checked: tracksMenu.visible || window.subtitleTrack >= 0
+                        checked: tracksMenu.visible || window.editor.subtitles.activeTrack >= 0
                         toolTip: tracksMenu.visible ? "" : "Audio and subtitles (B / V)"
                         onClicked: tracksMenu.visible ? tracksMenu.close() : tracksMenu.open()
 
@@ -917,14 +931,6 @@ ApplicationWindow {
                             contentItem: Column {
                                 spacing: 2
 
-                                Text {
-                                    visible: !tracksButton.hasChoices
-                                    padding: 12
-                                    text: (player.audioTracks.length === 0 ? "No audio" : "One audio track")
-                                        + " and no subtitles in this video."
-                                    color: Theme.text2
-                                }
-
                                 SectionTitle { visible: player.audioTracks.length > 1; text: "Audio" }
                                 Repeater {
                                     model: player.audioTracks.length > 1 ? player.audioTracks : []
@@ -938,32 +944,45 @@ ApplicationWindow {
                                 }
 
                                 Rectangle {
-                                    visible: player.audioTracks.length > 1 && player.subtitleTracks.length > 0
+                                    visible: player.audioTracks.length > 1
                                     width: parent.width
                                     height: 1
                                     color: Theme.border
                                 }
 
-                                SectionTitle { visible: player.subtitleTracks.length > 0; text: "Subtitles" }
+                                SectionTitle { text: "Subtitles" }
                                 TrackItem {
-                                    visible: player.subtitleTracks.length > 0
                                     text: "Off"
-                                    checked: window.subtitleTrack < 0
-                                    onClicked: window.setSubtitleTrack(-1)
+                                    checked: window.editor.subtitles.activeTrack < 0
+                                        && window.editor.subtitles.loadingTrack < 0
+                                    onClicked: window.editor.subtitles.setActiveTrack(-1)
                                 }
                                 Repeater {
-                                    model: player.subtitleTracks
+                                    model: window.editor.subtitles.tracks
                                     delegate: TrackItem {
                                         required property var modelData
                                         required property int index
-                                        readonly property bool canShow:
-                                            window.editor.canShowSubtitleTrack(index, player.subtitleTracks.length)
-                                        text: window.editor.trackLabel(modelData, index)
-                                            + (canShow ? "" : "  ·  image subtitles, can't be shown")
-                                        enabled: canShow
-                                        checked: window.subtitleTrack === index
-                                        onClicked: window.setSubtitleTrack(index)
+                                        text: modelData.label
+                                            + (window.editor.subtitles.loadingTrack === index ? "  ·  loading…" : "")
+                                            + (modelData.available ? "" : "  ·  " + modelData.note)
+                                        enabled: modelData.available
+                                        checked: window.editor.subtitles.activeTrack === index
+                                        onClicked: window.editor.subtitles.setActiveTrack(index)
                                     }
+                                }
+                                Text {
+                                    visible: window.editor.subtitles.tracks.length === 0
+                                    leftPadding: 12
+                                    topPadding: 2
+                                    bottomPadding: 4
+                                    text: "None in this video"
+                                    color: Theme.text3
+                                    font.pixelSize: 12
+                                }
+                                TrackItem {
+                                    iconName: "open"
+                                    text: "Load subtitle file…"
+                                    onClicked: subtitleDialog.open()
                                 }
                             }
                         }

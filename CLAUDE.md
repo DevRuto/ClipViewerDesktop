@@ -63,11 +63,16 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
   - `AppSettings`: `settings.json` in `%LOCALAPPDATA%\ClipViewerDesktop`. Unknown keys survive
     saving.
   - `media/`: `Process` (`runProcess`/`runTool`, `CancelToken`, error types), `FfmpegPaths`,
-    `MediaProbe`, `FrameGrabber`, `SmartCutPlan`, `ReencodeOptions` and `ClipExporter`.
+    `MediaProbe`, `MediaDetails`, `FrameGrabber`, `SmartCutPlan`, `ReencodeOptions`, `ClipExporter`
+    and `SubtitleExtractor`.
+  - `subtitles/`: `SubtitleTrack` (cues, lookup by time), `SrtParser` and `DvdSubtitle` (the DVD
+    subpicture decoder).
 - `app/`: the executable (`ClipViewerDesktop.exe`), a QML module with URI `ClipViewer`.
   - `src/EditorController`: all player/editor state and commands exposed to QML (`QML_ELEMENT`,
     passed in as the `editor` required property). `src/StillFrameProvider`: serves the paused
-    still frame as `image://still/<n>`. `src/main.cpp`: fonts, style, startup.
+    still frame as `image://still/<n>` (also the hover thumbnails and DVD subtitle pictures).
+    `src/SubtitleController`: the subtitle tracks and the current cue (`editor.subtitles`).
+    `src/Background.h`: `runInBackground`. `src/main.cpp`: fonts, style, startup.
   - `qml/Main.qml`: the window, which owns playback (`MediaPlayer`), the shortcuts and the layout.
     `TrimTimeline.qml`, `TimeField.qml`, `AppButton.qml`, `SegmentedControl.qml`,
     `ReencodeSettings.qml`, `Icon.qml`, `Theme.qml`.
@@ -157,6 +162,21 @@ are MPEG-TS files in a hidden `.<name>.parts-<guid>` folder next to the output, 
   only work in edit mode. The trim range is kept when switching back and forth.
 - Clicking the video: `EditorController::videoClick` returns the `PlayerClickGesture` action.
   A double-click on an edge undoes the first click's toggle, then seeks 10 s.
+
+## Subtitles
+
+- **Our overlay draws all subtitles; Qt's subtitle tracks stay off** (`Main.qml` resets
+  `activeSubtitleTrack` to -1). Qt only draws text, only while playing (not over the paused
+  still), and Qt 6.12's FFmpeg plugin segfaults when a DVD picture track is turned on during
+  playback. Don't turn them back on.
+- A track is read the first time it's picked, on the thread pool: text streams through
+  `ffmpeg -map 0:s:N -f srt -` into `SrtParser`, DVD pictures from `ffprobe -show_data`
+  packets into `DvdSubtitle`. mp4 takes about a second; a large mkv is read end to end (~7 s for
+  3 GB). Picture cues keep the encoded packet and are decoded only when shown (decoding a film's
+  worth up front would take hundreds of MB).
+- `<video>.srt` (and `<video>.*.srt`/`.ass`/`.ssa`/`.vtt`) next to the video is listed and the
+  first one turned on. Files can also be loaded from the menu or dropped on the window.
+- Blu-ray PGS isn't decoded yet; its tracks are listed but disabled.
 
 ## Qt pitfalls hit so far
 

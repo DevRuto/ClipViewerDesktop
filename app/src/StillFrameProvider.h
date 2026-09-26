@@ -5,7 +5,8 @@
 #include <QQuickImageProvider>
 
 // Serves an ffmpeg-decoded frame to QML as image://<id>/<generation>: the still shown while paused
-// ("still") and the timeline's hover preview ("thumb"). Only the latest frame is kept; the
+// ("still"), the timeline's hover preview ("thumb") and the DVD subtitle picture showing
+// ("subtitle"). Only the latest frame is kept; the
 // generation in the URL just makes QML reload it.
 class StillFrameProvider : public QQuickImageProvider
 {

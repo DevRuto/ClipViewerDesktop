@@ -3,6 +3,7 @@
 #include "media/ClipExporter.h"
 #include "media/FrameGrabber.h"
 #include "media/MediaProbe.h"
+#include "media/SubtitleExtractor.h"
 
 #include <QDir>
 #include <QFile>
@@ -25,6 +26,36 @@ private:
     QString samplePath() const { return m_dir.filePath("sample.mp4"); }
     QString mpegPath() const { return m_dir.filePath("sample-mpeg4.mkv"); }
     QString output(const QString &name) const { return m_dir.filePath(name); }
+
+    QString writeFile(const QString &name, const QByteArray &contents) const
+    {
+        QFile file(output(name));
+        if (!file.open(QIODevice::WriteOnly) || file.write(contents) != contents.size())
+            qFatal("Can't write %s", qPrintable(file.fileName()));
+        return file.fileName();
+    }
+
+    // The sample with two cues muxed in as a subtitle track of the given codec
+    QString withSubtitles(const QString &name, const QString &codec) const
+    {
+        const QString srt = writeFile("cues.srt", "1\n00:00:01,000 --> 00:00:02,500\nHello\n\n"
+                                                  "2\n00:00:03,000 --> 00:00:04,000\n<i>World</i>\n");
+        runTool(paths().ffmpeg,
+                {"-hide_banner", "-loglevel", "error", "-y", "-i", samplePath(), "-i", srt, "-map", "0", "-map", "1",
+                 "-c", "copy", "-c:s", codec, output(name)},
+                {});
+        return output(name);
+    }
+
+    static void verifyCues(const SubtitleTrack &track)
+    {
+        QCOMPARE(track.cues.size(), 2);
+        QCOMPARE(track.cues[0].start, 1.0);
+        QCOMPARE(track.cues[0].end, 2.5);
+        QCOMPARE(track.cues[0].text, "Hello");
+        QCOMPARE(track.cues[1].start, 3.0);
+        QCOMPARE(track.cues[1].text, "<i>World</i>");
+    }
     const FfmpegPaths &paths() const { return *m_paths; }
 
     // MD5 of every decoded video frame, in order.
@@ -236,6 +267,51 @@ private slots:
                  "testsrc=size=321x241:rate=10:duration=1", "-c:v", "ffv1", odd},
                 {});
         QCOMPARE(FrameGrabber(paths()).grab(odd, 0.5, 0).size(), QSize(321, 241));
+    }
+
+    void subtitles_extractTextTrack_mkv()
+    {
+        const QString mkv = withSubtitles("subs.mkv", "srt");
+        QCOMPARE(MediaProbe(paths()).probe(mkv).subtitleStreams().value(0).codec, "subrip");
+        verifyCues(SubtitleExtractor(paths()).extract(mkv, 0, SubtitleFormat::Text, {}));
+    }
+
+    void subtitles_extractTextTrack_mp4MovText()
+    {
+        const QString mp4 = withSubtitles("subs.mp4", "mov_text");
+        QCOMPARE(MediaProbe(paths()).probe(mp4).subtitleStreams().value(0).codec, "mov_text");
+        verifyCues(SubtitleExtractor(paths()).extract(mp4, 0, SubtitleFormat::Text, {}));
+    }
+
+    void subtitles_loadAssFile()
+    {
+        const QString ass = writeFile(
+            "styled.ass",
+            "[Script Info]\nScriptType: v4.00+\n\n[V4+ Styles]\n"
+            "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, "
+            "Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, "
+            "MarginL, MarginR, MarginV, Encoding\n"
+            "Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1"
+            "\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+            "Dialogue: 0,0:00:01.00,0:00:03.50,Default,,0,0,0,,{\\i1}Hello{\\i0} there\\Nsecond line\n");
+        const SubtitleTrack track = SubtitleExtractor(paths()).loadFile(ass, {});
+        QCOMPARE(track.cues.size(), 1);
+        QCOMPARE(track.cues[0].start, 1.0);
+        QCOMPARE(track.cues[0].end, 3.5);
+        QCOMPARE(track.cues[0].text, "<i>Hello</i> there<br>second line");
+    }
+
+    void subtitles_badInput_throwsInsteadOfCrashing()
+    {
+        CancelToken cancelled;
+        cancelled.cancel();
+        const QString mkv = withSubtitles("subs-cancel.mkv", "srt");
+        QVERIFY_THROWS_EXCEPTION(OperationCancelled,
+                                 SubtitleExtractor(paths()).extract(mkv, 0, SubtitleFormat::Text, cancelled));
+        // A stream that isn't there, a missing file, a video passed off as subtitles
+        QVERIFY_THROWS_EXCEPTION(FfmpegError, SubtitleExtractor(paths()).extract(mkv, 5, SubtitleFormat::Text, {}));
+        QVERIFY_THROWS_EXCEPTION(MediaError, SubtitleExtractor(paths()).loadFile(output("missing.srt"), {}));
+        QVERIFY(SubtitleExtractor(paths()).loadFile(writeFile("fake.srt", "not subtitles"), {}).isEmpty());
     }
 
     void grabFrame_pastEnd_returnsNull()

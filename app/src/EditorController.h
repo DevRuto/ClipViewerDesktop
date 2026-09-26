@@ -2,6 +2,7 @@
 
 #include "AppSettings.h"
 #include "PlayerClickGesture.h"
+#include "SubtitleController.h"
 #include "media/ClipExporter.h"
 #include "media/FfmpegPaths.h"
 #include "media/MediaInfo.h"
@@ -59,9 +60,11 @@ class EditorController : public QObject
     Q_PROPERTY(QString status READ status NOTIFY statusChanged)
     Q_PROPERTY(QUrl stillSource READ stillSource NOTIFY stillChanged)
     Q_PROPERTY(QUrl thumbnailSource READ thumbnailSource NOTIFY thumbnailChanged)
+    Q_PROPERTY(SubtitleController *subtitles READ subtitles CONSTANT)
 
 public:
-    EditorController(StillFrameProvider *stills, StillFrameProvider *thumbnails, QObject *parent = nullptr);
+    EditorController(StillFrameProvider *stills, StillFrameProvider *thumbnails, StillFrameProvider *subtitlePictures,
+                     QObject *parent = nullptr);
     ~EditorController() override;
 
     bool ffmpegFound() const { return m_paths.has_value(); }
@@ -97,6 +100,7 @@ public:
     QString status() const { return m_status; }
     QUrl stillSource() const { return m_stillSource; }
     QUrl thumbnailSource() const { return m_thumbnailSource; }
+    SubtitleController *subtitles() { return &m_subtitles; }
 
     // Opens a local video (path or file:// URL): probes it, then hands it to the player.
     Q_INVOKABLE void openFile(const QString &pathOrUrl);
@@ -139,13 +143,8 @@ public:
     // Sets one re-encode setting; a value that isn't one of its choices falls back to the default.
     Q_INVOKABLE void setReencodeOption(const QString &key, const QVariant &value);
     Q_INVOKABLE void resetReencode();
-    // A MediaPlayer audio or subtitle track as "Track 2 · English · Commentary".
+    // A MediaPlayer audio track as "Track 2 · English · Commentary".
     Q_INVOKABLE QString trackLabel(const QMediaMetaData &track, int index) const;
-    // Whether the player can show subtitle track `index` (text, not bitmap); see cv::MediaInfo.
-    Q_INVOKABLE bool canShowSubtitleTrack(int index, int trackCount) const
-    {
-        return m_info && m_info->canShowSubtitleTrack(index, trackCount);
-    }
 
 signals:
     void mediaChanged();
@@ -199,6 +198,7 @@ private:
     bool m_thumbnailBusy = false;
     qint64 m_thumbnailWanted = -1; // the step under the mouse, or -1
     QCache<qint64, QImage> m_thumbnailCache{64 << 20}; // cost in bytes
+    SubtitleController m_subtitles;
     cv::PlayerClickGesture m_clickGesture;
     QElapsedTimer m_clock;
 };

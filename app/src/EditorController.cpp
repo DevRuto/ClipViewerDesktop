@@ -1,5 +1,6 @@
 #include "EditorController.h"
 
+#include "Background.h"
 #include "StillFrameProvider.h"
 #include "TimeFormat.h"
 #include "media/FrameGrabber.h"
@@ -21,38 +22,17 @@
 
 namespace {
 
-// Runs work() on the thread pool and done(result) back on the UI thread, unless `owner` is gone
-// by then. work must not throw.
-template <typename Work, typename Done>
-void runInBackground(QObject *owner, Work work, Done done)
-{
-    QPointer<QObject> guard(owner);
-    QThreadPool::globalInstance()->start([guard, work = std::move(work), done = std::move(done)]() mutable {
-        auto result = work();
-        QMetaObject::invokeMethod(
-            QCoreApplication::instance(),
-            [guard, done = std::move(done), result = std::move(result)]() mutable {
-                if (guard)
-                    done(std::move(result));
-            },
-            Qt::QueuedConnection);
-    });
-}
-
-// The first line of an error message; ffmpeg's can run to many.
-QString firstLine(const char *message)
-{
-    return QString::fromUtf8(message).section(QChar('\n'), 0, 0).trimmed();
-}
-
 using cv::MediaDetails::formatBytes;
 
 } // namespace
 
-EditorController::EditorController(StillFrameProvider *stills, StillFrameProvider *thumbnails, QObject *parent)
+EditorController::EditorController(StillFrameProvider *stills, StillFrameProvider *thumbnails,
+                                   StillFrameProvider *subtitlePictures, QObject *parent)
     : QObject(parent), m_stills(stills), m_paths(cv::FfmpegPaths::locate()),
-      m_settings(cv::AppSettings::load(cv::AppSettings::defaultPath())), m_thumbnails(thumbnails)
+      m_settings(cv::AppSettings::load(cv::AppSettings::defaultPath())), m_thumbnails(thumbnails),
+      m_subtitles(subtitlePictures)
 {
+    connect(&m_subtitles, &SubtitleController::message, this, &EditorController::setStatus);
     m_clock.start();
     m_settingsSave.setSingleShot(true);
     m_settingsSave.setInterval(500);
@@ -263,6 +243,7 @@ void EditorController::openFile(const QString &pathOrUrl)
             clearStill();
             clearThumbnail();
             m_thumbnailCache.clear();
+            m_subtitles.setMedia(m_paths, &*m_info);
             // Before mediaChanged, so a playback error for the new source isn't cleared
             setStatus({});
             emit mediaChanged();

@@ -275,24 +275,6 @@ private slots:
         QCOMPARE(rotation(R"({ "tags": { "rotate": "nonsense" } })"), 0);
     }
 
-    void subtitleTracks_onlyTextOnesCanBeShown()
-    {
-        MediaInfo info;
-        info.streams = {{"video", "h264"}, {"subtitle", "subrip"}, {"audio", "aac"}, {"subtitle", "dvd_subtitle"},
-                        {"data", "bin_data"}, {"subtitle", "ass"}};
-        QVERIFY(info.canShowSubtitleTrack(0, 3));
-        QVERIFY(!info.canShowSubtitleTrack(1, 3)); // bitmap
-        QVERIFY(info.canShowSubtitleTrack(2, 3));
-        QVERIFY(!info.canShowSubtitleTrack(3, 3));
-        QVERIFY(!info.canShowSubtitleTrack(-1, 3));
-        // The player lists a different number: only safe when every track is text
-        QVERIFY(!info.canShowSubtitleTrack(0, 2));
-        info.streams[3].codec = "mov_text";
-        QVERIFY(info.canShowSubtitleTrack(0, 2));
-        QVERIFY(!MediaInfo::isTextSubtitleCodec("hdmv_pgs_subtitle"));
-        QVERIFY(!MediaInfo::isTextSubtitleCodec("some_future_codec"));
-    }
-
     void probeParse_noVideo_throws()
     {
         QVERIFY_THROWS_EXCEPTION(MediaError,

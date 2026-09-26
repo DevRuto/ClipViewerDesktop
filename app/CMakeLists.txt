@@ -1,7 +1,10 @@
 qt_add_executable(ClipViewerDesktop WIN32 MACOSX_BUNDLE
     src/EditorController.cpp
     src/EditorController.h
+    src/Background.h
     src/StillFrameProvider.h
+    src/SubtitleController.cpp
+    src/SubtitleController.h
     src/main.cpp
 )
 
