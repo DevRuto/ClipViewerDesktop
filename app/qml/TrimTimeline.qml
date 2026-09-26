@@ -30,7 +30,7 @@ Item {
     readonly property real trackLeft: handleWidth
     readonly property real trackWidth: Math.max(1, width - 2 * handleWidth)
 
-    implicitHeight: trimming ? 56 : 40
+    implicitHeight: (trimming ? 56 : 40) - (Theme.compact ? 8 : 0)
 
     function xFor(seconds) {
         return duration > 0 ? trackLeft + seconds / duration * trackWidth : trackLeft

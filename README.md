@@ -62,7 +62,7 @@ report to the end of that run's log. The next time you start the app, it tells y
 status bar.
 
 To report a problem, open the log folder and attach the files to the issue. To open it, use
-**Open log folder** at the bottom of the palette menu (top right), or the button in the crash
+**Open log folder** at the bottom of the settings (the gear, top right), or the button in the crash
 notice. The folder is here:
 
 | OS | Log folder |

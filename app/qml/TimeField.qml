@@ -11,7 +11,7 @@ TextField {
     property var commit: text => false
 
     implicitWidth: 104
-    implicitHeight: 32
+    implicitHeight: Theme.controlHeight
     horizontalAlignment: TextInput.AlignHCenter
     font.family: Theme.monoFont
     font.pixelSize: 13
@@ -38,9 +38,19 @@ TextField {
 
     background: Rectangle {
         radius: Theme.radius
-        color: Theme.sunken
+        color: Theme.fieldFill
         border.width: 1
         border.color: field.activeFocus ? Theme.accentLine
             : field.hovered ? Theme.controlBorderHover : Theme.controlBorder
+
+        // Fluent: a darker bottom edge, the accent while typing
+        Rectangle {
+            visible: Theme.bottomStroke
+            x: parent.radius
+            width: parent.width - 2 * parent.radius
+            height: field.activeFocus ? 2 : 1
+            y: parent.height - height
+            color: field.activeFocus ? Theme.accent : Theme.fieldBottom
+        }
     }
 }

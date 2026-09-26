@@ -193,6 +193,24 @@ void EditorController::setTheme(const QString &name)
     emit themeChanged();
 }
 
+void EditorController::setStyle(const QString &name)
+{
+    if (m_settings.style == name)
+        return;
+    m_settings.style = name;
+    saveSettings();
+    emit styleChanged();
+}
+
+void EditorController::setCompact(bool value)
+{
+    if (m_settings.compact == value)
+        return;
+    m_settings.compact = value;
+    saveSettings();
+    emit compactChanged();
+}
+
 void EditorController::setAlwaysOnTop(bool value)
 {
     if (m_settings.alwaysOnTop == value)

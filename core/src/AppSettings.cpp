@@ -20,6 +20,8 @@ const QString Reencode = QStringLiteral("reencode");
 const QString LastExportFolder = QStringLiteral("lastExportFolder");
 const QString LastFrameFolder = QStringLiteral("lastFrameFolder");
 const QString Theme = QStringLiteral("theme");
+const QString Style = QStringLiteral("style");
+const QString Compact = QStringLiteral("compact");
 const QString AlwaysOnTop = QStringLiteral("alwaysOnTop");
 const QString ClickControls = QStringLiteral("clickControls");
 const QString EdgeDoubleClick = QStringLiteral("edgeDoubleClick");
@@ -55,6 +57,8 @@ AppSettings AppSettings::load(const QString &path)
     settings.lastExportFolder = json.take(LastExportFolder).toString();
     settings.lastFrameFolder = json.take(LastFrameFolder).toString();
     settings.theme = json.take(Theme).toString(settings.theme);
+    settings.style = json.take(Style).toString(settings.style);
+    settings.compact = json.take(Compact).toBool(settings.compact);
     settings.alwaysOnTop = json.take(AlwaysOnTop).toBool(settings.alwaysOnTop);
     settings.clickControls = json.take(ClickControls).toBool(settings.clickControls);
     settings.edgeDoubleClick = json.take(EdgeDoubleClick).toBool(settings.edgeDoubleClick);
@@ -76,6 +80,8 @@ bool AppSettings::save(const QString &path) const
     json[LastExportFolder] = lastExportFolder;
     json[LastFrameFolder] = lastFrameFolder;
     json[Theme] = theme;
+    json[Style] = style;
+    json[Compact] = compact;
     json[AlwaysOnTop] = alwaysOnTop;
     json[ClickControls] = clickControls;
     json[EdgeDoubleClick] = edgeDoubleClick;
@@ -97,6 +103,7 @@ bool AppSettings::operator==(const AppSettings &other) const
     return volume == other.volume && muted == other.muted && smartCut == other.smartCut
         && reencode == other.reencode && lastExportFolder == other.lastExportFolder
         && lastFrameFolder == other.lastFrameFolder && theme == other.theme
+        && style == other.style && compact == other.compact
         && alwaysOnTop == other.alwaysOnTop && clickControls == other.clickControls
         && edgeDoubleClick == other.edgeDoubleClick && shortSkip == other.shortSkip
         && longSkip == other.longSkip && autoplay == other.autoplay && subtitles == other.subtitles

@@ -40,6 +40,7 @@ qt_add_qml_module(ClipViewerDesktop
         qml/HoverPreview.qml
         qml/Icon.qml
         qml/Main.qml
+        qml/PopupBackground.qml
         qml/ReencodeSettings.qml
         qml/SegmentedControl.qml
         qml/SettingsPane.qml

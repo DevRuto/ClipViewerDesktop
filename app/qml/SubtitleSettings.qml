@@ -12,11 +12,7 @@ Popup {
     padding: 16
     width: 380
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-    background: Rectangle {
-        radius: Theme.radius
-        color: Theme.popup
-        border.color: Theme.border
-    }
+    background: PopupBackground {}
 
     // key: the setting's name in editor.subtitleStyle
     readonly property var settings: [

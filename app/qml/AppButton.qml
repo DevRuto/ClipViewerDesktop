@@ -12,13 +12,13 @@ Button {
     property bool danger: false
     property string toolTip
 
-    implicitHeight: 32
+    implicitHeight: Theme.controlHeight
     padding: 8
     leftPadding: text ? 12 : 8
     rightPadding: text ? 12 : 8
     font.family: Theme.font
-    font.pixelSize: 13
-    font.weight: control.flat ? Font.DemiBold : Font.Medium
+    font.pixelSize: Theme.fontSize
+    font.weight: control.flat ? Font.DemiBold : Theme.buttonWeight
     focusPolicy: Qt.NoFocus // keep keyboard shortcuts with the window
 
     ToolTip.visible: toolTip !== "" && hovered
@@ -49,10 +49,10 @@ Button {
     }
 
     background: Rectangle {
-        radius: Theme.radius
+        radius: Theme.cornerFor(height)
         color: {
             if (!control.enabled)
-                return control.flat ? Theme.raised : (control.quiet ? "transparent" : Theme.raised)
+                return control.flat ? Theme.raised : (control.quiet ? Theme.clear : Theme.buttonFill)
             if (control.flat) {
                 const base = control.danger ? Theme.danger : Theme.accent
                 return control.down ? Qt.darker(base, 1.1) : control.hovered ? Qt.lighter(base, 1.08) : base
@@ -63,12 +63,22 @@ Button {
                 return Theme.raisedPressed
             if (control.hovered)
                 return Theme.raisedHover
-            return control.quiet ? "transparent" : Theme.raised
+            return control.quiet ? Theme.clear : Theme.buttonFill
         }
-        border.width: control.flat || control.quiet ? 0 : 1
+        border.width: control.flat || control.quiet || !Theme.buttonBorder ? 0 : 1
         border.color: control.checked ? Theme.accentLine
             : control.hovered ? Theme.controlBorderHover : Theme.controlBorder
 
         Behavior on color { ColorAnimation { duration: 80 } }
+
+        // Fluent: a darker line along the bottom of outlined buttons
+        Rectangle {
+            visible: Theme.bottomStroke && !control.flat && !control.quiet && !control.checked
+            x: parent.radius
+            y: parent.height - 1
+            width: parent.width - 2 * parent.radius
+            height: 1
+            color: Theme.controlBorderHover
+        }
     }
 }

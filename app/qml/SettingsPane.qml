@@ -11,11 +11,7 @@ Popup {
     padding: 16
     width: 360
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-    background: Rectangle {
-        radius: Theme.radius
-        color: Theme.popup
-        border.color: Theme.border
-    }
+    background: PopupBackground {}
 
     readonly property var onOff: [
         { label: "On", value: true },
@@ -107,6 +103,18 @@ Popup {
                     font.pixelSize: 12
                     wrapMode: Text.Wrap
                 }
+            }
+        }
+
+        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.border }
+        AppButton {
+            Layout.fillWidth: true
+            iconName: "open"
+            text: "Open log folder"
+            toolTip: "Logs and crash reports, to attach to a bug report"
+            onClicked: {
+                root.close()
+                root.editor.openLogFolder()
             }
         }
     }

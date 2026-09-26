@@ -39,8 +39,19 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
     `raised`, `border`, `text`/`text2`/`text3`, `accent`, … Use them in views, never literal
     colours. Grey text uses `text2`/`text3`, not `opacity`. Monospace is `Theme.monoFont`.
   - The tokens come from the current palette (`Theme.name`, the `theme` setting, picked from the
-    palette menu in the top bar): Graphite (default), Slate and Plum (dark), Paper, Mist and Sage
-    (light). A new palette needs every token; keep grey and accent text at 4.5:1 or better.
+    palette menu in the top bar): Graphite (default), Slate, Plum, Sage, Lavender, Azure and
+    Steel, each with a dark and a light side under the same label (same position in
+    `darkNames`/`lightNames`; the menu's Dark/Light switch swaps between them). The light sides of
+    Graphite, Slate and Sage keep their original keys (`paper`, `mist`, `sage`). A new palette needs every token; keep grey and accent text at 4.5:1 or
+    better. A palette can also set `fieldFill`, `fieldBottom` and `videoBackground`, which
+    otherwise fall back to `sunken`/`controlBorderHover`.
+  - The style (`Theme.style`, the `style` setting, the same menu) sets the shape and type, and
+    goes with any palette: Graphite (default), Material, Fluent, Adwaita. Its values are
+    `radius`, `popupRadius`, `controlHeight`, `pill`, `buttonBorder`, `bottomStroke` (Fluent's
+    darker bottom edge), `outlined` (unfilled buttons and fields), `fontSize` and fonts (tried in
+    order, falling back to Geist). Popups use `PopupBackground`. `Theme.compact` (the `compact`
+    setting) shrinks the controls (`compactHeight`) and the bars (`barHeight`, `statusHeight`,
+    `panelPadding`, `panelSpacing`) with any style.
   - A choice between a few options is a `SegmentedControl` (a track with a sliding highlight).
   - Buttons are `AppButton`. The default is raised and outlined. `flat` is the amber main action
     (`flat` + `danger` for a destructive one), `quiet` is borderless (toolbars), and `checkable`

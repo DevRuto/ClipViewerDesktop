@@ -16,7 +16,7 @@ Rectangle {
     height: (thumbnail.visible ? thumbnail.height + padding : 0) + timeText.implicitHeight + 2 * padding
     x: Math.max(0, Math.min((parent ? parent.width : 0) - width, pointerX - width / 2))
     y: -height - 4
-    radius: Theme.radius
+    radius: Theme.popupRadius
     color: Theme.popup
     border.width: 1
     border.color: Theme.border

@@ -58,10 +58,22 @@ ApplicationWindow {
     color: Theme.background
     title: (editor.hasMedia ? editor.fileName + " — " : "") + "ClipViewer " + Qt.application.version
     font.family: Theme.font
-    font.pixelSize: 13
+    font.pixelSize: Theme.fontSize
 
     // The palette follows the saved setting (Theme falls back to Graphite for an unknown name).
     Binding { target: Theme; property: "name"; value: window.editor.theme }
+    Binding { target: Theme; property: "style"; value: window.editor.style }
+    Binding { target: Theme; property: "compact"; value: window.editor.compact }
+
+    // A section title in a menu
+    component MenuHeading: Text {
+        leftPadding: 12
+        topPadding: 6
+        bottomPadding: 2
+        color: Theme.text3
+        font.pixelSize: 11
+        font.weight: Font.DemiBold
+    }
 
     onPositionChanged: editor.subtitles.setPosition(position)
 
@@ -411,7 +423,7 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             visible: !window.fullScreen && !window.controlsHidden
-            implicitHeight: 48
+            implicitHeight: Theme.barHeight
             color: Theme.chrome
 
             RowLayout {
@@ -459,11 +471,7 @@ ApplicationWindow {
                         width: 480
                         padding: 16
                         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-                        background: Rectangle {
-                            radius: Theme.radius
-                            color: Theme.popup
-                            border.color: Theme.border
-                        }
+                        background: PopupBackground {}
 
                         contentItem: ColumnLayout {
                             spacing: 12
@@ -545,11 +553,7 @@ ApplicationWindow {
                         x: themeButton.width - width
                         padding: 4
                         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-                        background: Rectangle {
-                            radius: Theme.radius
-                            color: Theme.popup
-                            border.color: Theme.border
-                        }
+                        background: PopupBackground {}
 
                         // One row per palette, with a swatch: its background with its accent in the middle
                         Component {
@@ -563,10 +567,7 @@ ApplicationWindow {
                                 leftPadding: 36
                                 text: colors.label
                                 checked: Theme.name === modelData
-                                onClicked: {
-                                    window.editor.theme = modelData
-                                    themeMenu.close()
-                                }
+                                onClicked: window.editor.theme = modelData
 
                                 Rectangle {
                                     x: 12
@@ -589,21 +590,38 @@ ApplicationWindow {
 
                         contentItem: Column {
                             spacing: 2
-                            Repeater { model: Theme.darkNames; delegate: themeItem }
-                            Rectangle { width: parent.width; height: 1; color: Theme.border }
-                            Repeater { model: Theme.lightNames; delegate: themeItem }
-                            Rectangle { width: parent.width; height: 1; color: Theme.border }
-                            AppButton {
-                                width: 160
-                                quiet: true
-                                iconName: "open"
-                                text: "Open log folder"
-                                toolTip: "Logs and crash reports, to attach to a bug report"
-                                onClicked: {
-                                    themeMenu.close()
-                                    window.editor.openLogFolder()
+                            MenuHeading { text: "Style" }
+                            Repeater {
+                                model: Theme.styleNames
+                                delegate: AppButton {
+                                    required property string modelData
+                                    width: 160
+                                    quiet: true
+                                    leftPadding: 36
+                                    text: Theme.styles[modelData].label
+                                    toolTip: Theme.styles[modelData].hint
+                                    checked: Theme.style === modelData
+                                    onClicked: window.editor.style = modelData
                                 }
                             }
+                            SegmentedControl {
+                                width: 160
+                                fill: true
+                                model: [{ label: "Regular", value: false }, { label: "Compact", value: true }]
+                                value: Theme.compact
+                                onActivated: value => window.editor.compact = value
+                            }
+                            Rectangle { width: parent.width; height: 1; color: Theme.border }
+                            MenuHeading { text: "Colours" }
+                            // Flipping the side swaps to the palette's counterpart (Graphite <-> Paper, ...).
+                            SegmentedControl {
+                                width: 160
+                                fill: true
+                                model: [{ label: "Dark", value: false }, { label: "Light", value: true }]
+                                value: Theme.light
+                                onActivated: value => window.editor.theme = Theme.counterpart(Theme.name, value)
+                            }
+                            Repeater { model: Theme.light ? Theme.lightNames : Theme.darkNames; delegate: themeItem }
                         }
                     }
                 }
@@ -639,7 +657,7 @@ ApplicationWindow {
             id: videoArea
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: Theme.sunken
+            color: Theme.videoBackground
             clip: true // a zoomed picture
 
             // The picture's box: the shape of the chosen aspect, as large as fits once rotated, then
@@ -935,7 +953,7 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             visible: !window.controlsHidden
-            implicitHeight: controls.implicitHeight + 24
+            implicitHeight: controls.implicitHeight + 2 * Theme.panelPadding
             color: Theme.surface
 
             Rectangle { width: parent.width; height: 1; color: Theme.border }
@@ -943,8 +961,8 @@ ApplicationWindow {
             ColumnLayout {
                 id: controls
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 10
+                anchors.margins: Theme.panelPadding
+                spacing: Theme.panelSpacing
 
                 RowLayout {
                     spacing: 4
@@ -990,11 +1008,7 @@ ApplicationWindow {
                             x: Math.min(0, (tracksButton.width - width) / 2)
                             padding: 4
                             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-                            background: Rectangle {
-                                radius: Theme.radius
-                                color: Theme.popup
-                                border.color: Theme.border
-                            }
+                            background: PopupBackground {}
 
                             component SectionTitle: Text {
                                 leftPadding: 12
@@ -1099,11 +1113,7 @@ ApplicationWindow {
                             width: 340
                             padding: 16
                             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-                            background: Rectangle {
-                                radius: Theme.radius
-                                color: Theme.popup
-                                border.color: Theme.border
-                            }
+                            background: PopupBackground {}
 
                             component Setting: ColumnLayout {
                                 property alias title: settingTitle.text
@@ -1208,11 +1218,7 @@ ApplicationWindow {
                             x: (speedButton.width - width) / 2
                             padding: 4
                             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-                            background: Rectangle {
-                                radius: Theme.radius
-                                color: Theme.popup
-                                border.color: Theme.border
-                            }
+                            background: PopupBackground {}
                             contentItem: Column {
                                 spacing: 2
                                 // Fastest at the top, like the list's position above the button
@@ -1471,7 +1477,7 @@ ApplicationWindow {
             visible: window.editor.exporting
                 || (!window.fullScreen && !window.controlsHidden
                     && (window.editor.status.length > 0 || window.editor.crashNotice))
-            implicitHeight: 34
+            implicitHeight: Theme.statusHeight
             color: warning ? Theme.warningSoft : Theme.chrome
 
             Rectangle { width: parent.width; height: 1; color: Theme.border }

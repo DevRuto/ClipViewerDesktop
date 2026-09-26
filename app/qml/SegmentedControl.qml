@@ -17,9 +17,9 @@ Rectangle {
     readonly property var current: currentIndex >= 0 ? model[currentIndex] : null
 
     implicitWidth: segments.implicitWidth + 2 * inset
-    implicitHeight: 32
-    radius: Theme.radius
-    color: Theme.sunken
+    implicitHeight: Theme.controlHeight
+    radius: Theme.cornerFor(height)
+    color: Theme.fieldFill
     border.color: Theme.controlBorder
 
     readonly property int inset: 3
@@ -36,7 +36,7 @@ Rectangle {
         y: root.inset
         width: target ? target.width : 0
         height: root.height - 2 * root.inset
-        radius: Theme.radius - 2
+        radius: Math.max(0, Theme.cornerFor(height + 2 * root.inset) - root.inset)
         color: root.enabled ? Theme.accentSoft : Theme.raised
         border.color: root.enabled ? Theme.accentLine : Theme.controlBorder
 
@@ -89,7 +89,7 @@ Rectangle {
                         text: segment.modelData.label
                         color: content.foreground
                         font.family: Theme.font
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.fontSize
                         font.weight: Font.Medium // the same for all, so picking one doesn't resize it
                         anchors.verticalCenter: parent.verticalCenter
                         Behavior on color { ColorAnimation { duration: 80 } }

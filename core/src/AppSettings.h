@@ -23,7 +23,13 @@ struct AppSettings
     // Where the last saved frame (PNG) went. Empty: next to the source video.
     QString lastFrameFolder;
     // Colour palette name (Theme.qml); the UI falls back to Graphite for a name it doesn't know.
+    // Any palette goes with any style.
     QString theme = QStringLiteral("graphite");
+    // Shape of the controls (Theme.qml): graphite, material, fluent or adwaita. The UI falls back to
+    // Graphite for a name it doesn't know.
+    QString style = QStringLiteral("graphite");
+    // Smaller controls and bars.
+    bool compact = false;
     // Keeps the window above other windows.
     bool alwaysOnTop = false;
     // Clicking the video plays/pauses, a double-click on an edge seeks (PlayerClickGesture).

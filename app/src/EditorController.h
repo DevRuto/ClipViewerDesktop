@@ -57,6 +57,8 @@ class EditorController : public QObject
     Q_PROPERTY(double volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
+    Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
+    Q_PROPERTY(bool compact READ compact WRITE setCompact NOTIFY compactChanged)
     Q_PROPERTY(bool alwaysOnTop READ alwaysOnTop WRITE setAlwaysOnTop NOTIFY alwaysOnTopChanged)
     // Click to play/pause, double-click an edge to seek; off leaves clicks on the video alone.
     Q_PROPERTY(bool clickControls READ clickControls WRITE setClickControls NOTIFY clickControlsChanged)
@@ -106,6 +108,10 @@ public:
     void setMuted(bool value);
     QString theme() const { return m_settings.theme; }
     void setTheme(const QString &name);
+    QString style() const { return m_settings.style; }
+    void setStyle(const QString &name);
+    bool compact() const { return m_settings.compact; }
+    void setCompact(bool value);
     bool alwaysOnTop() const { return m_settings.alwaysOnTop; }
     void setAlwaysOnTop(bool value);
     bool clickControls() const { return m_settings.clickControls; }
@@ -188,6 +194,8 @@ signals:
     void volumeChanged();
     void mutedChanged();
     void themeChanged();
+    void styleChanged();
+    void compactChanged();
     void alwaysOnTopChanged();
     void clickControlsChanged();
     void edgeDoubleClickChanged();
