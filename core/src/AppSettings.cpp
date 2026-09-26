@@ -19,6 +19,7 @@ const QString SmartCut = QStringLiteral("smartCut");
 const QString Reencode = QStringLiteral("reencode");
 const QString LastExportFolder = QStringLiteral("lastExportFolder");
 const QString Theme = QStringLiteral("theme");
+const QString AlwaysOnTop = QStringLiteral("alwaysOnTop");
 
 } // namespace
 
@@ -46,6 +47,7 @@ AppSettings AppSettings::load(const QString &path)
     settings.reencode = ReencodeOptions::fromJson(json.take(Reencode).toObject());
     settings.lastExportFolder = json.take(LastExportFolder).toString();
     settings.theme = json.take(Theme).toString(settings.theme);
+    settings.alwaysOnTop = json.take(AlwaysOnTop).toBool(settings.alwaysOnTop);
     settings.m_unknown = json;
     return settings;
 }
@@ -59,6 +61,7 @@ bool AppSettings::save(const QString &path) const
     json[Reencode] = reencode.toJson();
     json[LastExportFolder] = lastExportFolder;
     json[Theme] = theme;
+    json[AlwaysOnTop] = alwaysOnTop;
 
     QDir().mkpath(QFileInfo(path).absolutePath());
     QSaveFile file(path);
@@ -72,6 +75,7 @@ bool AppSettings::operator==(const AppSettings &other) const
 {
     return volume == other.volume && muted == other.muted && smartCut == other.smartCut
         && reencode == other.reencode && lastExportFolder == other.lastExportFolder && theme == other.theme
+        && alwaysOnTop == other.alwaysOnTop
         && m_unknown == other.m_unknown;
 }
 

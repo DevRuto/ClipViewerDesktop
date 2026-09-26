@@ -117,6 +117,7 @@ private slots:
         settings.reencode.maxHeight = 720;
         settings.lastExportFolder = "D:/exports";
         settings.theme = "paper";
+        settings.alwaysOnTop = true;
         QVERIFY(settings.save(path));
 
         QFile file(path);
@@ -126,17 +127,19 @@ private slots:
         QCOMPARE(json.value("smartCut").toBool(true), false);
         QCOMPARE(json.value("reencode").toObject().value("maxHeight").toInt(), 720);
         QCOMPARE(json.value("theme").toString(), QString("paper"));
+        QCOMPARE(json.value("alwaysOnTop").toBool(), true);
         QCOMPARE(AppSettings::load(path), settings);
     }
 
     void settings_invalidValues_fallBack()
     {
         QTemporaryDir dir;
-        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\", \"theme\": 3 }");
+        writeFile(dir.filePath("s.json"), "{ \"volume\": 7, \"muted\": \"yes\", \"theme\": 3, \"alwaysOnTop\": 1 }");
         const AppSettings settings = AppSettings::load(dir.filePath("s.json"));
         QCOMPARE(settings.volume, 1.0);
         QCOMPARE(settings.muted, false);
         QCOMPARE(settings.theme, QString("graphite"));
+        QCOMPARE(settings.alwaysOnTop, false);
     }
 
     void settings_garbage_givesDefaults()

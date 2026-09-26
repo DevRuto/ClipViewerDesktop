@@ -49,6 +49,7 @@ class EditorController : public QObject
     Q_PROPERTY(double volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
+    Q_PROPERTY(bool alwaysOnTop READ alwaysOnTop WRITE setAlwaysOnTop NOTIFY alwaysOnTopChanged)
     Q_PROPERTY(bool exporting READ exporting NOTIFY exportingChanged)
     Q_PROPERTY(double exportProgress READ exportProgress NOTIFY exportProgressChanged)
     Q_PROPERTY(QString status READ status NOTIFY statusChanged)
@@ -83,6 +84,8 @@ public:
     void setMuted(bool value);
     QString theme() const { return m_settings.theme; }
     void setTheme(const QString &name);
+    bool alwaysOnTop() const { return m_settings.alwaysOnTop; }
+    void setAlwaysOnTop(bool value);
     bool exporting() const { return m_exporting; }
     double exportProgress() const { return m_exportProgress; }
     QString status() const { return m_status; }
@@ -136,6 +139,7 @@ signals:
     void volumeChanged();
     void mutedChanged();
     void themeChanged();
+    void alwaysOnTopChanged();
     void exportingChanged();
     void exportProgressChanged();
     void statusChanged();

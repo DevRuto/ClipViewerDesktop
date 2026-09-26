@@ -21,6 +21,8 @@ struct AppSettings
     QString lastExportFolder;
     // Colour palette name (Theme.qml); the UI falls back to Graphite for a name it doesn't know.
     QString theme = QStringLiteral("graphite");
+    // Keeps the window above other windows.
+    bool alwaysOnTop = false;
 
     // %LOCALAPPDATA%\ClipViewerDesktop\settings.json on Windows.
     static QString defaultPath();

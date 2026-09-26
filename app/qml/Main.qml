@@ -42,6 +42,7 @@ ApplicationWindow {
     minimumWidth: 760
     minimumHeight: 520
     visible: true
+    flags: editor.alwaysOnTop ? Qt.Window | Qt.WindowStaysOnTopHint : Qt.Window
     color: Theme.background
     title: (editor.hasMedia ? editor.fileName + " — " : "") + "ClipViewer " + Qt.application.version
     font.family: Theme.font
@@ -317,6 +318,7 @@ ApplicationWindow {
     Shortcut { sequence: "B"; onActivated: window.cycleAudioTrack() }
     Shortcut { sequence: "V"; onActivated: window.cycleSubtitleTrack() }
     Shortcut { sequence: "F"; onActivated: window.toggleFullScreen() }
+    Shortcut { sequence: "Ctrl+T"; onActivated: window.editor.alwaysOnTop = !window.editor.alwaysOnTop }
     Shortcut { sequence: "Ctrl+H"; onActivated: window.controlsHidden = !window.controlsHidden }
     Shortcut { sequence: "Esc"; enabled: window.fullScreen; onActivated: window.toggleFullScreen() }
 
@@ -370,6 +372,13 @@ ApplicationWindow {
                     font.pixelSize: 12
                     elide: Text.ElideRight
                     Layout.fillWidth: true
+                }
+                AppButton {
+                    quiet: true
+                    iconName: "pin"
+                    checked: window.editor.alwaysOnTop
+                    toolTip: window.editor.alwaysOnTop ? "Stop keeping on top (Ctrl+T)" : "Keep on top of other windows (Ctrl+T)"
+                    onClicked: window.editor.alwaysOnTop = !window.editor.alwaysOnTop
                 }
                 AppButton {
                     id: themeButton

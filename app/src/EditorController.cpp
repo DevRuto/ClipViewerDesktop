@@ -169,6 +169,15 @@ void EditorController::setTheme(const QString &name)
     emit themeChanged();
 }
 
+void EditorController::setAlwaysOnTop(bool value)
+{
+    if (m_settings.alwaysOnTop == value)
+        return;
+    m_settings.alwaysOnTop = value;
+    saveSettings();
+    emit alwaysOnTopChanged();
+}
+
 void EditorController::saveSettings()
 {
     m_settingsSave.start(); // a volume drag changes it many times a second
