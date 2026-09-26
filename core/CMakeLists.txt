@@ -15,6 +15,8 @@ add_library(cvcore STATIC
     src/media/FfmpegPaths.h
     src/media/FrameGrabber.cpp
     src/media/FrameGrabber.h
+    src/media/MediaDetails.cpp
+    src/media/MediaDetails.h
     src/media/MediaInfo.h
     src/media/MediaProbe.cpp
     src/media/MediaProbe.h

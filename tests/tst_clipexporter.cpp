@@ -1,9 +1,12 @@
-// ClipExporter's argument building and parsing, SmartCutPlan and MediaProbe's JSON parsing. No
+// ClipExporter's argument building and parsing, SmartCutPlan, MediaProbe's JSON parsing and the
+// media info text. No
 // ffmpeg needed; tst_ffmpegintegration runs the real thing.
 #include "media/ClipExporter.h"
+#include "media/MediaDetails.h"
 #include "media/MediaProbe.h"
 #include "media/SmartCutPlan.h"
 
+#include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryFile>
 #include <QTest>
@@ -222,6 +225,54 @@ private slots:
         QCOMPARE(info.sizeBytes, 1234);
         QCOMPARE(info.audioCodec, "aac");
         QVERIFY(info.hasAudio());
+    }
+
+    void probeParse_readsStreamDetails()
+    {
+        const QByteArray json = R"({
+            "streams": [
+                { "codec_type": "video", "codec_name": "h264", "profile": "High", "width": 1920, "height": 1080,
+                  "avg_frame_rate": "30/1", "pix_fmt": "yuv420p", "bit_rate": "8200000", "sample_aspect_ratio": "4:3",
+                  "side_data_list": [ { "side_data_type": "Display Matrix", "rotation": -90 } ] },
+                { "codec_type": "audio", "codec_name": "aac", "profile": "LC", "sample_rate": "48000", "channels": 2,
+                  "channel_layout": "stereo", "tags": { "language": "eng", "BPS": "192000" } },
+                { "codec_type": "audio", "codec_name": "opus", "channels": 6,
+                  "tags": { "language": "und", "title": " Commentary " } },
+                { "codec_type": "subtitle", "codec_name": "subrip", "tags": { "language": "fre" } }
+            ],
+            "format": { "format_name": "matroska,webm", "format_long_name": "Matroska / WebM",
+                        "duration": "90", "size": "2048", "bit_rate": "8500000" }
+        })";
+        const MediaInfo info = MediaProbe::parse("clip.mkv", json);
+        QCOMPARE(info.rotation, 90);
+        QCOMPARE(info.sampleAspectRatio, 4.0 / 3);
+        QCOMPARE(info.displayAspect(), 1080 / (1920 * 4.0 / 3)); // turned sideways
+        QCOMPARE(info.streams.size(), 4);
+        QCOMPARE(info.streams[1].bitRate, 192000);
+        QCOMPARE(info.streams[2].language, QString());
+        QCOMPARE(info.streams[2].title, "Commentary");
+
+        using Row = MediaDetails::Row;
+        QCOMPARE(MediaDetails::describe(info),
+                 (QList<Row>{{"Container", "Matroska / WebM"},
+                             {"Duration", "1:30.000"},
+                             {"Size", "2 KB"},
+                             {"Bit rate", "8.5 Mbit/s"},
+                             {"Rotation", "90°"},
+                             {"Video", "h264 (High) · 1920×1080 · 30 fps · yuv420p · 8.2 Mbit/s"},
+                             {"Audio 1", "aac (LC) · 48 kHz · stereo · 192 kbit/s · eng"},
+                             {"Audio 2", "opus · 6 ch · “Commentary”"},
+                             {"Subtitles", "subrip · fre"}}));
+    }
+
+    void probeParse_rotation()
+    {
+        const auto rotation = [](const char *json) { return MediaProbe::parseRotation(QJsonDocument::fromJson(json).object()); };
+        QCOMPARE(rotation(R"({})"), 0);
+        QCOMPARE(rotation(R"({ "side_data_list": [ { "side_data_type": "Display Matrix", "rotation": 90 } ] })"), 270);
+        QCOMPARE(rotation(R"({ "side_data_list": [ { "side_data_type": "Display Matrix", "rotation": -180 } ] })"), 180);
+        QCOMPARE(rotation(R"({ "tags": { "rotate": "90" } })"), 90);
+        QCOMPARE(rotation(R"({ "tags": { "rotate": "nonsense" } })"), 0);
     }
 
     void probeParse_noVideo_throws()

@@ -3,9 +3,12 @@
 #include "StillFrameProvider.h"
 #include "TimeFormat.h"
 #include "media/FrameGrabber.h"
+#include "media/MediaDetails.h"
 #include "media/MediaProbe.h"
 
+#include <QClipboard>
 #include <QCoreApplication>
+#include <QGuiApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonObject>
@@ -42,16 +45,7 @@ QString firstLine(const char *message)
     return QString::fromUtf8(message).section(QChar('\n'), 0, 0).trimmed();
 }
 
-QString formatBytes(double bytes)
-{
-    if (bytes >= 1 << 30)
-        return QStringLiteral("%1 GB").arg(bytes / (1 << 30), 0, 'f', 2);
-    if (bytes >= 1 << 20)
-        return QStringLiteral("%1 MB").arg(bytes / (1 << 20), 0, 'f', 1);
-    if (bytes >= 1 << 10)
-        return QStringLiteral("%1 KB").arg(std::round(bytes / (1 << 10)));
-    return QStringLiteral("%1 B").arg(bytes);
-}
+using cv::MediaDetails::formatBytes;
 
 } // namespace
 
@@ -99,6 +93,26 @@ QString EditorController::infoText() const
                       i.hasAudio() ? QStringLiteral("%1 + %2").arg(i.videoCodec, i.audioCodec) : i.videoCodec,
                       formatBytes(static_cast<double>(i.sizeBytes))};
     return parts.join(QStringLiteral("  ·  "));
+}
+
+QVariantList EditorController::mediaDetails() const
+{
+    QVariantList rows;
+    if (m_info) {
+        for (const auto &row : cv::MediaDetails::describe(*m_info))
+            rows << QVariantMap{{QStringLiteral("label"), row.label}, {QStringLiteral("value"), row.value}};
+    }
+    return rows;
+}
+
+void EditorController::copyMediaDetails() const
+{
+    if (!m_info)
+        return;
+    QStringList lines{m_info->path};
+    for (const auto &row : cv::MediaDetails::describe(*m_info))
+        lines << row.label + QStringLiteral(": ") + row.value;
+    QGuiApplication::clipboard()->setText(lines.join(QLatin1Char('\n')));
 }
 
 QString EditorController::clipSummary() const

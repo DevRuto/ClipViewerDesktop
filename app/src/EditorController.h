@@ -37,6 +37,10 @@ class EditorController : public QObject
     Q_PROPERTY(QString fileName READ fileName NOTIFY mediaChanged)
     Q_PROPERTY(QString infoText READ infoText NOTIFY mediaChanged)
     Q_PROPERTY(bool hasAudio READ hasAudio NOTIFY mediaChanged)
+    // The media info panel: [{ label, value }], see cv::MediaDetails
+    Q_PROPERTY(QVariantList mediaDetails READ mediaDetails NOTIFY mediaChanged)
+    // Width / height of the picture as shown (pixel aspect and rotation applied)
+    Q_PROPERTY(double displayAspect READ displayAspect NOTIFY mediaChanged)
     Q_PROPERTY(double duration READ duration NOTIFY mediaChanged)
     Q_PROPERTY(double frameDuration READ frameDuration NOTIFY mediaChanged)
     Q_PROPERTY(double trimStart READ trimStart WRITE setTrimStart NOTIFY trimChanged)
@@ -67,6 +71,8 @@ public:
     QString fileName() const;
     QString infoText() const;
     bool hasAudio() const { return m_info && m_info->hasAudio(); }
+    QVariantList mediaDetails() const;
+    double displayAspect() const { return m_info ? m_info->displayAspect() : 16.0 / 9; }
     double duration() const { return m_info ? m_info->duration : 0; }
     double frameDuration() const { return m_info ? m_info->frameDuration() : 1 / 30.0; }
     double trimStart() const { return m_trimStart; }
@@ -125,6 +131,8 @@ public:
     // Saves the full-size frame at `seconds` as a PNG and reports the result in the status bar.
     Q_INVOKABLE void saveFrame(double seconds, const QUrl &destination);
     Q_INVOKABLE void cancelExport();
+    // Copies the media info panel's text.
+    Q_INVOKABLE void copyMediaDetails() const;
     Q_INVOKABLE void clearStatus() { setStatus({}); }
     // MediaPlayer.onErrorOccurred: shows the player's message in the status bar.
     Q_INVOKABLE void reportPlaybackError(const QString &message);
