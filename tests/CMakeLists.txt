@@ -12,3 +12,8 @@ add_cv_test(tst_subtitles)
 # Generates sample clips with ffmpeg's lavfi sources; skips itself when ffmpeg isn't found.
 add_cv_test(tst_ffmpegintegration)
 set_tests_properties(tst_ffmpegintegration PROPERTIES TIMEOUT 300)
+
+# Plays ffmpeg-generated clips in each supported format through Qt Multimedia; skips without ffmpeg.
+add_cv_test(tst_playbackformats)
+target_link_libraries(tst_playbackformats PRIVATE Qt6::Multimedia)
+set_tests_properties(tst_playbackformats PROPERTIES TIMEOUT 300 ENVIRONMENT QT_QPA_PLATFORM=offscreen)

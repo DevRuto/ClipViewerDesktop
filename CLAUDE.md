@@ -79,7 +79,10 @@ started with no history of its own (orphan branch); don't merge `avalonia` into 
   - `assets/`: fonts and icons.
 - `tests/`: one Qt Test executable per `tst_*.cpp`. `tst_ffmpegintegration` generates sample
   clips with ffmpeg's `lavfi` sources and checks real exports frame by frame (framemd5). It
-  skips itself when ffmpeg isn't found.
+  skips itself when ffmpeg isn't found. `tst_playbackformats` plays generated clips in each
+  supported format (mp4/mov/mkv/webm/avi; H.264, HEVC 8/10-bit, VP8, VP9, AV1, MPEG-4) through
+  `QMediaPlayer` offscreen and checks that frames and audio come out; a row skips when the local
+  ffmpeg lacks its encoder.
 
 ## Commands
 
@@ -203,8 +206,6 @@ are MPEG-TS files in a hidden `.<name>.parts-<guid>` folder next to the output, 
   (`StartupArgs::makePathsAbsolute` is ready for that).
 - Remember the window's size and position; a recent files list.
 - A playback speed control; a thumbnail preview when hovering over the timeline.
-- Check the full format list (mp4 H.264/HEVC, mov, mkv, webm VP8/VP9/AV1, avi) against Qt
-  Multimedia's FFmpeg backend.
 - Try the macOS/Linux builds on real machines. The presets, deployment and FFmpeg bundling are in
   place, but only Windows has been built and run. Sign and notarize the macOS bundle.
 
