@@ -35,13 +35,14 @@ private:
         return file.fileName();
     }
 
-    // The sample with two cues muxed in as a subtitle track of the given codec
+    // The sample's video with two cues muxed in as a subtitle track of the given codec. No audio:
+    // ffmpeg 6.x's mkv muxer shifts every stream by the AAC priming (23 ms), cues included.
     QString withSubtitles(const QString &name, const QString &codec) const
     {
         const QString srt = writeFile("cues.srt", "1\n00:00:01,000 --> 00:00:02,500\nHello\n\n"
                                                   "2\n00:00:03,000 --> 00:00:04,000\n<i>World</i>\n");
         runTool(paths().ffmpeg,
-                {"-hide_banner", "-loglevel", "error", "-y", "-i", samplePath(), "-i", srt, "-map", "0", "-map", "1",
+                {"-hide_banner", "-loglevel", "error", "-y", "-i", samplePath(), "-i", srt, "-map", "0:v", "-map", "1",
                  "-c", "copy", "-c:s", codec, output(name)},
                 {});
         return output(name);
